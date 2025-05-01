@@ -1,0 +1,17 @@
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: news_db_cont
+    restart: always
+    environment:
+      POSTGRES_USER: keyko
+      POSTGRES_PASSWORD: qaplTY123&sdf
+      POSTGRES_DB: news
+    ports:
+      - "5429:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+volumes:
+  postgres_data:

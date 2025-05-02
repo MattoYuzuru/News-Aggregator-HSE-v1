@@ -1,8 +1,7 @@
 package com.news;
 
 import com.news.model.Article;
-import com.news.parser.BBCParser;
-import com.news.parser.NHKParser;
+import com.news.parser.sourse.NHKParser;
 import com.news.parser.ParserService;
 
 import java.util.List;

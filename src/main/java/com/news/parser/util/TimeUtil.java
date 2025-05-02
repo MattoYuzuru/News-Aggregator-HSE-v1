@@ -1,4 +1,4 @@
-package com.news.parser;
+package com.news.parser.util;
 
 import java.time.*;
 

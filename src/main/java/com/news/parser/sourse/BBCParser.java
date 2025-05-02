@@ -1,6 +1,7 @@
-package com.news.parser;
+package com.news.parser.sourse;
 
 import com.news.model.Article;
+import com.news.parser.NewsSource;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -20,7 +21,7 @@ public class BBCParser implements NewsSource {
             for (Element el : doc.select("a.gs-c-promo-heading")) {
                 String title = el.text();
                 String link = el.absUrl("href");
-                articles.add(new Article(title, link, "", LocalDateTime.now()));
+                articles.add(Article.builder().title(title).url(link).build());
             }
         } catch (Exception e) {
             e.printStackTrace();

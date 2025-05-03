@@ -27,6 +27,8 @@ public class TimeUtil {
             return currentTime.minusHours(timeNumber);
         } else if (timeType == 's') { // seconds
             return currentTime.minusSeconds(timeNumber);
+        } else if (timeType == 'd') {
+            return currentTime.minusDays(timeNumber);
         } else {
             throw new IllegalArgumentException("Wrong time format: " + time);
         }

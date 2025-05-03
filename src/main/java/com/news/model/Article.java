@@ -19,6 +19,7 @@ public class Article {
     private String content;
     @ToString.Exclude
     private String summary;
+    private String region;
     @ToString.Exclude
     private List<String> tags = new ArrayList<>();
     private LocalDateTime publishedAt;

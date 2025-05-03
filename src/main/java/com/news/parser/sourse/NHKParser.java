@@ -33,7 +33,6 @@ public class NHKParser implements NewsSource {
                     String url = BASE_URL + titleEl.attr("href");
                     String dataTime = dateEl.attr("data-time");
                     articles.add(Article.builder().title(title).url(url).content("content").publishedAt(dateConverter(dataTime)).build());
-                    //
                 }
             }
 

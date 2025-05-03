@@ -12,4 +12,23 @@ public class TimeUtil {
 
         return LocalDateTime.ofInstant(instant, moscowZone);
     }
+
+    public static LocalDateTime dateFromString(String time) {
+        String[] timeSplit = time.split(" ");
+        int timeNumber = Integer.parseInt(timeSplit[0]);
+        char timeType = timeSplit[1].charAt(0);
+
+        ZoneId moscowZone = ZoneId.of("Europe/Moscow");
+        LocalDateTime currentTime = LocalDateTime.now(moscowZone);
+
+        if (timeType == 'm') { // minutes
+            return currentTime.minusMinutes(timeNumber);
+        } else if (timeType == 'h') { // hours
+            return currentTime.minusHours(timeNumber);
+        } else if (timeType == 's') { // seconds
+            return currentTime.minusSeconds(timeNumber);
+        } else {
+            throw new IllegalArgumentException("Wrong time format: " + time);
+        }
+    }
 }

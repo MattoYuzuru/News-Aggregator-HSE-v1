@@ -24,6 +24,23 @@ public class NHKParser implements NewsSource {
         try {
             Document doc = Jsoup.connect(NEWS_LIST_URL).get();
 
+            for (Element article : doc.select("article.c-mainSectionArticle")) {
+                Element titleEl = article.selectFirst("h2.c-mainSectionArticle__title");
+                Element dateEl = article.selectFirst("div.c-mainSectionArticle__date");
+
+                if (titleEl != null && dateEl != null) {
+                    String title = titleEl.text();
+                    String date = dateEl.attr("data-time");
+                    String url = BASE_URL + titleEl.attr("href");
+
+                    articles.add(Article.builder()
+                            .title(title)
+                            .url(url)
+                            .publishedAt(dateConverter(date))
+                            .build());
+                }
+            }
+
             for (Element article : doc.select("div.c-articleList article.c-article")) {
                 Element titleEl = article.selectFirst("h3.c-article__title a");
                 Element dateEl = article.selectFirst("div.c-article__date");
@@ -32,7 +49,12 @@ public class NHKParser implements NewsSource {
                     String title = titleEl.text();
                     String url = BASE_URL + titleEl.attr("href");
                     String dataTime = dateEl.attr("data-time");
-                    articles.add(Article.builder().title(title).url(url).content("content").publishedAt(dateConverter(dataTime)).build());
+                    articles.add(Article.builder()
+                            .title(title)
+                            .url(url)
+                            .content("content")
+                            .publishedAt(dateConverter(dataTime))
+                            .build());
                 }
             }
 

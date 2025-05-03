@@ -9,7 +9,7 @@ import java.util.List;
 
 public class AggregatorApp {
     public static void main(String[] args) {
-        ParserService parserService = new ParserService(List.of(new BBCParser()));
+        ParserService parserService = new ParserService(List.of(new NHKParser()));
         List<Article> articles = parserService.collectAllArticles();
         articles.forEach(System.out::println);
     }

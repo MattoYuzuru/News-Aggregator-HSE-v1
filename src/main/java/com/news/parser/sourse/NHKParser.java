@@ -25,7 +25,7 @@ public class NHKParser implements NewsSource {
             Document doc = Jsoup.connect(NEWS_LIST_URL).get();
 
             for (Element article : doc.select("article.c-mainSectionArticle")) {
-                Element titleEl = article.selectFirst("h2.c-mainSectionArticle__title");
+                Element titleEl = article.selectFirst("h2.c-mainSectionArticle__title a");
                 Element dateEl = article.selectFirst("div.c-mainSectionArticle__date");
 
                 if (titleEl != null && dateEl != null) {

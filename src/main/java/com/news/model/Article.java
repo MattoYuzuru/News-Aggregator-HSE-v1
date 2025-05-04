@@ -12,22 +12,26 @@ import java.util.List;
 @AllArgsConstructor
 @ToString
 public class Article {
+    @ToString.Exclude
     private Long id;
     private String title;
     private String url;
-    @ToString.Exclude
+//    @ToString.Exclude
     private String content;
     @ToString.Exclude
     private String summary;
-    private String region;
     @ToString.Exclude
+    private String region;
+//    @ToString.Exclude
     private List<String> tags = new ArrayList<>();
     private LocalDateTime publishedAt;
     @ToString.Exclude
     private String author;
+    @ToString.Exclude
     private String sourceName;
     @ToString.Exclude
     private String imageUrl;
+    @ToString.Exclude
     private String language;
 }
 

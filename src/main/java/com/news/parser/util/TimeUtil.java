@@ -1,6 +1,7 @@
 package com.news.parser.util;
 
 import java.time.*;
+import java.util.Objects;
 
 public class TimeUtil {
     public static LocalDateTime dateConverter(String time) {
@@ -14,12 +15,17 @@ public class TimeUtil {
     }
 
     public static LocalDateTime dateFromString(String time) {
-        String[] timeSplit = time.split(" ");
-        int timeNumber = Integer.parseInt(timeSplit[0]);
-        char timeType = timeSplit[1].charAt(0);
-
         ZoneId moscowZone = ZoneId.of("Europe/Moscow");
         LocalDateTime currentTime = LocalDateTime.now(moscowZone);
+
+        String[] timeSplit = time.split(" ");
+
+        if (Objects.equals(timeSplit[0], "Just")) {
+            return currentTime;
+        }
+
+        int timeNumber = Integer.parseInt(timeSplit[0]);
+        char timeType = timeSplit[1].charAt(0);
 
         if (timeType == 'm') { // minutes
             return currentTime.minusMinutes(timeNumber);

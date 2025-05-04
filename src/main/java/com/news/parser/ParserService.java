@@ -14,6 +14,7 @@ public class ParserService {
 
     public List<Article> collectAllArticles() {
         List<Article> all = new ArrayList<>();
+
         for (NewsSource source : sources) {
             all.addAll(source.fetchArticles());
         }

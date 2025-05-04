@@ -4,7 +4,7 @@ import com.news.model.Article;
 
 import java.util.List;
 
-
-public interface NewsSource {
+public interface Parser {
     List<Article> fetchArticles();
+    ArticleEnricher getEnricher();
 }

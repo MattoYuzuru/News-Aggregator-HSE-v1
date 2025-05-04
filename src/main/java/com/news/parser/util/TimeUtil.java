@@ -4,6 +4,15 @@ import java.time.*;
 import java.util.Objects;
 
 public class TimeUtil {
+    public static LocalDateTime ISOConverter(String time) {
+        // Parse the ISO 8601 string to a ZonedDateTime in UTC
+        ZonedDateTime utcDateTime = ZonedDateTime.parse(time);
+
+        ZonedDateTime moscowDateTime = utcDateTime.withZoneSameInstant(ZoneId.of("Europe/Moscow"));
+
+        return moscowDateTime.toLocalDateTime();
+    }
+
     public static LocalDateTime dateConverter(String time) {
         long timestampMs = Long.parseLong(time);
 
@@ -15,6 +24,7 @@ public class TimeUtil {
     }
 
     public static LocalDateTime dateFromString(String time) {
+        // useless | Delete later
         ZoneId moscowZone = ZoneId.of("Europe/Moscow");
         LocalDateTime currentTime = LocalDateTime.now(moscowZone);
 

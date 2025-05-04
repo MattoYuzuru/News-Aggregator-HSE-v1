@@ -1,7 +1,9 @@
 package com.news.parser.sourse;
 
 import com.news.model.Article;
-import com.news.parser.NewsSource;
+import com.news.parser.ArticleEnricher;
+import com.news.parser.Parser;
+import com.news.parser.article.BBCArticleParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -13,8 +15,10 @@ import java.util.Set;
 
 import static com.news.parser.util.TimeUtil.dateFromString;
 
-public class BBCParser implements NewsSource {
+public class BBCParser implements Parser {
     private static final String URL = "https://www.bbc.com/news";
+
+    private final ArticleEnricher enricher = new BBCArticleParser();
 
     @Override
     public List<Article> fetchArticles() {
@@ -46,6 +50,7 @@ public class BBCParser implements NewsSource {
                         .url(url)
                         .content("content")
                         .region(region)
+                        .sourceName("BBC")
                         .publishedAt(dateFromString(date))
                         .build());
             }
@@ -53,5 +58,10 @@ public class BBCParser implements NewsSource {
             e.printStackTrace();
         }
         return articles;
+    }
+
+    @Override
+    public ArticleEnricher getEnricher() {
+        return enricher;
     }
 }

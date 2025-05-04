@@ -1,7 +1,9 @@
 package com.news.parser.sourse;
 
 import com.news.model.Article;
-import com.news.parser.NewsSource;
+import com.news.parser.ArticleEnricher;
+import com.news.parser.Parser;
+import com.news.parser.article.NHKArticleParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,12 +12,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-
 import static com.news.parser.util.TimeUtil.dateConverter;
 
-public class NHKParser implements NewsSource {
+public class NHKParser implements Parser {
     private static final String BASE_URL = "https://www3.nhk.or.jp";
     private static final String NEWS_LIST_URL = BASE_URL + "/nhkworld/en/news/list/?p=1";
+
+    private final ArticleEnricher enricher = new NHKArticleParser();
 
     @Override
     public List<Article> fetchArticles() {
@@ -36,6 +39,7 @@ public class NHKParser implements NewsSource {
                     articles.add(Article.builder()
                             .title(title)
                             .url(url)
+                            .sourceName("NHK")
                             .publishedAt(dateConverter(date))
                             .build());
                 }
@@ -52,7 +56,7 @@ public class NHKParser implements NewsSource {
                     articles.add(Article.builder()
                             .title(title)
                             .url(url)
-                            .content("content")
+                            .sourceName("NHK")
                             .publishedAt(dateConverter(dataTime))
                             .build());
                 }
@@ -67,7 +71,12 @@ public class NHKParser implements NewsSource {
                     String title = titleEl.text();
                     String url = BASE_URL + linkEl.attr("href");
                     String dataTime = dateEl.attr("data-time");
-                    articles.add(Article.builder().title(title).url(url).content("content").publishedAt(dateConverter(dataTime)).build());
+                    articles.add(Article.builder()
+                            .title(title)
+                            .url(url)
+                            .sourceName("NHK")
+                            .publishedAt(dateConverter(dataTime))
+                            .build());
                 }
             }
 
@@ -78,10 +87,8 @@ public class NHKParser implements NewsSource {
         return articles;
     }
 
-    // main title : p-article2__title
-    // main content : p-article2__content / p-article__body
-    // main tags ul : p-newsDetail__tags c-tags2
-    // lists c-articleMediaList / c-articleMedia__title / c-article__date
+    @Override
+    public ArticleEnricher getEnricher() {
+        return enricher;
+    }
 }
-
-

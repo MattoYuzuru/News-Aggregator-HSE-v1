@@ -20,14 +20,14 @@ public class Article {
     private String content;
     @ToString.Exclude
     private String summary;
-    @ToString.Exclude
+//    @ToString.Exclude
     private String region;
 //    @ToString.Exclude
     private List<String> tags = new ArrayList<>();
     private LocalDateTime publishedAt;
-    @ToString.Exclude
+//    @ToString.Exclude
     private String author;
-    @ToString.Exclude
+//    @ToString.Exclude
     private String sourceName;
     @ToString.Exclude
     private String imageUrl;

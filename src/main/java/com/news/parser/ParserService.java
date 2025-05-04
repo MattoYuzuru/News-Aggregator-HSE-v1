@@ -2,22 +2,36 @@ package com.news.parser;
 
 import com.news.model.Article;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ParserService {
-    private final List<NewsSource> sources;
+    private final List<Parser> parsers;
 
-    public ParserService(List<NewsSource> sources) {
-        this.sources = sources;
+    public ParserService(List<Parser> parsers) {
+        this.parsers = parsers;
     }
 
     public List<Article> collectAllArticles() {
         List<Article> all = new ArrayList<>();
 
-        for (NewsSource source : sources) {
-            all.addAll(source.fetchArticles());
+        for (Parser parser : parsers) {
+            List<Article> articles = parser.fetchArticles();
+            ArticleEnricher enricher = parser.getEnricher();
+
+            for (Article article : articles) {
+                try {
+                    enricher.enrich(article);
+                } catch (IOException e) {
+                    System.out.println("Failed to enrich article: " + article.getUrl());
+                    e.printStackTrace();
+                }
+            }
+
+            all.addAll(articles);
         }
+
         return all;
     }
 }

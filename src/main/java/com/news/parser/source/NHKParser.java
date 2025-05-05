@@ -1,4 +1,4 @@
-package com.news.parser.sourse;
+package com.news.parser.source;
 
 import com.news.model.Article;
 import com.news.parser.ArticleEnricher;

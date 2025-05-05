@@ -25,7 +25,7 @@ public class ParserService {
                     enricher.enrich(article);
                 } catch (IOException e) {
                     System.out.println("Failed to enrich article: " + article.getUrl());
-                    e.printStackTrace();
+                    System.out.println("Error description: " + e.getMessage());
                 }
             }
 

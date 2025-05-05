@@ -8,6 +8,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -54,8 +55,8 @@ public class BBCParser implements Parser {
                         .publishedAt(dateFromString(date))
                         .build());
             }
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (IOException e) {
+            System.out.println("Failed to fetch articles from BBC: " + e.getMessage());
         }
         return articles;
     }

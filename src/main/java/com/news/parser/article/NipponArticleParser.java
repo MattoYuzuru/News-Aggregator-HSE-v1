@@ -22,24 +22,28 @@ public class NipponArticleParser implements ArticleEnricher {
 
         Element titleEl = document.selectFirst("h1");
         Elements contentEl = document.select("div[class='editArea']");
-        Elements tagsEl = document.select("section.c-detailkeyward");
+        // section.c-detailkeyward -> tags without separation
+        Elements tagsEl = document.select("section.c-detailkeyward a");
         Element authorEl = document.selectFirst("meta[name=\"cXenseParse:author\"]");
 
-        if (titleEl != null && authorEl != null) {
+        if (titleEl != null) {
             String title = titleEl.text();
-            String content = contentEl.text();
-            String author = authorEl.attr("content");
-            List<String> tags = new ArrayList<>();
-            for (Element el : tagsEl) {
-                tags.add(el.text());
-            }
-
-            article.setContent(content);
             article.setTitle(title);
-            article.setTags(tags);
+        }
+
+        if (authorEl != null) {
+            String author = authorEl.attr("content");
             article.setAuthor(author);
         }
 
+        List<String> tags = new ArrayList<>();
+        for (Element el : tagsEl) {
+            tags.add(el.text());
+        }
+        article.setTags(tags);
+
+        String content = contentEl.text();
+        article.setContent(content);
     }
 
     @Override
@@ -48,7 +52,7 @@ public class NipponArticleParser implements ArticleEnricher {
     }
 
     public static void main(String[] args) throws IOException {
-        Document doc = Jsoup.connect("https://www.nippon.com/ru/people/e00203/").get();
+        Document doc = Jsoup.connect("https://www.nippon.com/ru/japan-data/h02382/").get();
         System.out.println(doc.html());
     }
 }

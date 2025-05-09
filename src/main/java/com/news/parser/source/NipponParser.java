@@ -29,7 +29,7 @@ public class NipponParser implements Parser {
             Document xmlDoc = Jsoup.connect(SITEMAP_URL).parser(org.jsoup.parser.Parser.xmlParser()).get();
             Elements urlElements = xmlDoc.select("url");
 
-            LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(1);
+            LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
 
             for (Element urlElement : urlElements) {
 

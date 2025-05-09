@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.news.parser.util.TimeUtil.dateFromString;
 
 public class BBCParser implements Parser {
     private static final String URL = "https://www.bbc.com/news";
@@ -39,11 +38,9 @@ public class BBCParser implements Parser {
                 uniqueArticles.add(url);
 
                 Element titleEl = card.selectFirst("h2[data-testid=card-headline]");
-                Element dateEl = card.selectFirst("span[data-testid=card-metadata-lastupdated]");
                 Element regionEl = card.selectFirst("span[data-testid=card-metadata-tag]");
 
                 String title = titleEl != null ? titleEl.text() : "Untitled";
-                String date = dateEl != null ? dateEl.text() : "Unknown";
                 String region = regionEl != null ? regionEl.text() : "Unknown";
 
                 articles.add(Article.builder()
@@ -52,7 +49,6 @@ public class BBCParser implements Parser {
                         .content("content")
                         .region(region)
                         .sourceName("BBC")
-                        .publishedAt(dateFromString(date))
                         .build());
             }
         } catch (IOException e) {

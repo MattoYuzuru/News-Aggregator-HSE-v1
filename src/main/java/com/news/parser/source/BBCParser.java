@@ -54,6 +54,7 @@ public class BBCParser implements Parser {
         } catch (IOException e) {
             System.out.println("Failed to fetch articles from BBC: " + e.getMessage());
         }
+
         return articles;
     }
 

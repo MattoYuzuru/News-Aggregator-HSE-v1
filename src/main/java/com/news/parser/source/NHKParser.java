@@ -25,7 +25,10 @@ public class NHKParser implements Parser {
         List<Article> articles = new ArrayList<>();
 
         try {
-            Document doc = Jsoup.connect(NEWS_LIST_URL).get();
+            Document doc = Jsoup.connect(NEWS_LIST_URL).userAgent("\"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0.0.0 Safari/537.36\"")
+                    .header("Accept-Language", "en-US,en;q=0.9")
+                    .header("Accept-Encoding", "gzip, deflate")
+                    .get();
 
             for (Element article : doc.select("article.c-mainSectionArticle")) {
                 Element titleEl = article.selectFirst("h2.c-mainSectionArticle__title a");

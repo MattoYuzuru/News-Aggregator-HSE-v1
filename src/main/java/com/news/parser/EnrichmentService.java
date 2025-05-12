@@ -1,7 +1,6 @@
-package com.news.service;
+package com.news.parser;
 
 import com.news.model.Article;
-import com.news.parser.ArticleEnricher;
 
 import java.io.IOException;
 import java.util.List;

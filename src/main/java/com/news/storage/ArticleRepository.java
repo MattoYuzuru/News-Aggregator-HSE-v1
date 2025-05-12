@@ -2,6 +2,7 @@ package com.news.storage;
 
 import com.news.model.Article;
 
+import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 

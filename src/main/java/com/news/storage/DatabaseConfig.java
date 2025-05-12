@@ -5,12 +5,11 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DatabaseConfig {
-    public static Connection getConnection() {
-        try {
-            return DriverManager.getConnection(
-                    "jdbc:postgresql://localhost:5429/news", "keyko", "qaplTY123&sdf");
-        } catch (SQLException e) {
-            throw new RuntimeException("Failed to connect to DB: ", e);
-        }
+    public static Connection getConnection() throws SQLException {
+        String url = "jdbc:postgresql://localhost:5429/news";
+        String user = "keyko";
+        String password = "qaplTY123&sdf";
+        System.out.println("Success!");
+        return DriverManager.getConnection(url, user, password);
     }
 }

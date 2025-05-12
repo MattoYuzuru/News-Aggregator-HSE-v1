@@ -6,13 +6,24 @@ import java.io.IOException;
 import java.util.List;
 
 public class EnrichmentService {
-    public void enrichAll(List<Article> articles, ArticleEnricher enricher) {
+    private final List<ArticleEnricher> enrichers;
+
+    public EnrichmentService(List<ArticleEnricher> enrichers) {
+        this.enrichers = enrichers;
+    }
+
+    public void enrichAll(List<Article> articles) {
         for (Article article : articles) {
-            try {
-                enricher.enrich(article);
-            } catch (IOException e) {
-                System.out.println("Failed to enrich article: " + article.getUrl());
-                System.out.println("Error: " + e.getMessage());
+            for (ArticleEnricher enricher : enrichers) {
+                if (enricher.supports(article)) {
+                    try {
+                        enricher.enrich(article);
+                    } catch (IOException e) {
+                        System.out.println("Failed to enrich article: " + article.getUrl());
+                        System.out.println("Error: " + e.getMessage());
+                    }
+                    break;
+                }
             }
         }
     }

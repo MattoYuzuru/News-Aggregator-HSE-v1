@@ -1,23 +1,25 @@
 package com.news;
 
 import com.news.model.Article;
+import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
 import com.news.parser.ParserService;
+import com.news.parser.EnrichmentService;
 import com.news.parser.source.BBCParser;
 import com.news.parser.source.NHKParser;
 import com.news.parser.source.NipponParser;
-import com.news.parser.EnrichmentService;
-import com.news.storage.ArticleRepository;
-import com.news.storage.DatabaseConfig;
+import com.news.storage.*;
 import com.news.storage.impl.JdbcArticleRepository;
+import com.news.storage.impl.JdbcTagRepository;
+import com.news.storage.impl.JdbcArticleTagLinker;
 
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.List;
 
 public class AggregatorApp {
-    public static void main(String[] args) throws SQLException {
+
+    private static List<Article> getArticles(EnrichmentService enrichmentService) {
         List<Parser> parsers = List.of(
                 new NHKParser(),
                 new BBCParser(),
@@ -25,19 +27,49 @@ public class AggregatorApp {
         );
 
         ParserService parserService = new ParserService(parsers);
-        EnrichmentService enrichmentService = new EnrichmentService();
+        List<Article> articles = parserService.collectAllArticles();
+        enrichmentService.enrichAll(articles);
+        return articles;
+    }
 
-        List<Article> allArticles = new ArrayList<>();
+    public static void main(String[] args) {
+        try (Connection connection = DatabaseConfig.getConnection()) {
+            // 1. Init enrichers
+            List<Parser> parsers = List.of(
+                    new NHKParser(),
+                    new BBCParser(),
+                    new NipponParser()
+            );
+            List<ArticleEnricher> enrichers = parsers.stream()
+                    .map(Parser::getEnricher)
+                    .toList();
 
-        for (Parser parser : parsers) {
-            List<Article> articles = parser.fetchArticles();
-            enrichmentService.enrichAll(articles, parser.getEnricher());
-            allArticles.addAll(articles);
+            EnrichmentService enrichmentService = new EnrichmentService(enrichers);
+            List<Article> articles = getArticles(enrichmentService);
+
+            // 2. Repo Init
+            ArticleRepository articleRepo = new JdbcArticleRepository(connection);
+            TagRepository tagRepo = new JdbcTagRepository(connection);
+            ArticleTagLinker tagLinker = new JdbcArticleTagLinker(connection);
+
+            // 3. Save Articles and Tags
+            for (Article article : articles) {
+                articleRepo.save(article);
+                if (article.getTags() != null && !article.getTags().isEmpty()) {
+                    int articleId = articleRepo.findIdByUrl(article.getUrl())
+                            .orElseThrow(() -> new IllegalStateException("Article not found after insert"));
+
+                    for (String tag : article.getTags()) {
+                        int tagId = tagRepo.getOrCreateTagId(tag);
+                        tagLinker.linkArticleTags(articleId, tagId);
+                    }
+                }
+            }
+
+            articleRepo.findAll().forEach(System.out::println);
+
+        } catch (SQLException e) {
+            System.err.println("Database error: " + e.getMessage());
         }
-        Connection connection = DatabaseConfig.getConnection();
-        ArticleRepository repository = new JdbcArticleRepository(connection);
-
-        repository.saveAll(allArticles);
-        allArticles.forEach(System.out::println);
     }
 }

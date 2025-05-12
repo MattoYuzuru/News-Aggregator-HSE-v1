@@ -10,6 +10,7 @@ public interface ArticleRepository {
     void save(Article article);
     void saveAll(List<Article> articles);
     Optional<Article> findByUrl(String url);
+    Optional<Integer> findIdByUrl(String url);
     List<Article> findAll();
     void deleteOlderThanDays(int days);
 }

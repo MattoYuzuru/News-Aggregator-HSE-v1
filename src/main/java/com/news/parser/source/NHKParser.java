@@ -78,6 +78,7 @@ public class NHKParser implements Parser {
                             .title(title)
                             .url(url)
                             .sourceName("NHK")
+                            .language("eng")
                             .publishedAt(dateConverter(dataTime))
                             .build());
                 }

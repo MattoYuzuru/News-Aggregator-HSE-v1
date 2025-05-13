@@ -50,9 +50,4 @@ public class NipponArticleParser implements ArticleEnricher {
     public boolean supports(Article article) {
         return article.getUrl().contains("nippon.com");
     }
-
-    public static void main(String[] args) throws IOException {
-        Document doc = Jsoup.connect("https://www.nippon.com/ru/japan-data/h02382/").get();
-        System.out.println(doc.html());
-    }
 }

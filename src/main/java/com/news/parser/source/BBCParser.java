@@ -49,6 +49,7 @@ public class BBCParser implements Parser {
                         .content("content")
                         .region(region)
                         .sourceName("BBC")
+                        .language("eng")
                         .build());
             }
         } catch (IOException e) {

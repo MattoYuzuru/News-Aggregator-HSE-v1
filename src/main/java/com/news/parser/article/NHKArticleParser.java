@@ -1,6 +1,7 @@
 package com.news.parser.article;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -27,6 +28,7 @@ public class NHKArticleParser implements ArticleEnricher {
             tags.add(keyword.trim());
         }
         article.setTags(tags);
+        article.setStatus(ArticleStatus.ENRICHED);
     }
 
     @Override

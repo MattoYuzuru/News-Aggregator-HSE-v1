@@ -1,6 +1,7 @@
 package com.news.parser.article;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -44,6 +45,7 @@ public class NipponArticleParser implements ArticleEnricher {
 
         String content = contentEl.text();
         article.setContent(content);
+        article.setStatus(ArticleStatus.ENRICHED);
     }
 
     @Override

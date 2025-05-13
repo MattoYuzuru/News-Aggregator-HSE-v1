@@ -1,6 +1,7 @@
 package com.news.parser.article;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -43,6 +44,7 @@ public class BBCArticleParser implements ArticleEnricher {
             article.setTags(tags);
             article.setAuthor(author);
             article.setPublishedAt(ISOConverter(time));
+            article.setStatus(ArticleStatus.ENRICHED);
         }
     }
 

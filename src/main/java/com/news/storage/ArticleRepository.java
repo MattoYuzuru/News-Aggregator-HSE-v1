@@ -1,6 +1,7 @@
 package com.news.storage;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 
 import java.sql.SQLException;
 import java.util.List;
@@ -12,5 +13,7 @@ public interface ArticleRepository {
     Optional<Article> findByUrl(String url);
     Optional<Integer> findIdByUrl(String url);
     List<Article> findAll();
+    List<Article> findByStatus(ArticleStatus status);
+    void update(Article article); // updates article records using AI
     void deleteOlderThanDays(int days);
 }

@@ -1,6 +1,7 @@
 package com.news.storage.impl;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.storage.ArticleRepository;
 import com.news.storage.StorageException;
 
@@ -20,7 +21,8 @@ public class JdbcArticleRepository implements ArticleRepository {
     @Override
     public void save(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO articles (title, content, url, author, region, published_at) VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
+                "INSERT INTO articles (title, content, url, author, region, published_at, source_name, language, status) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getUrl());
@@ -33,6 +35,11 @@ public class JdbcArticleRepository implements ArticleRepository {
             } else {
                 stmt.setNull(6, Types.TIMESTAMP);
             }
+
+            stmt.setString(7, article.getSourceName());
+            stmt.setString(8, article.getLanguage());
+
+            stmt.setString(9, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -63,6 +70,9 @@ public class JdbcArticleRepository implements ArticleRepository {
                         .publishedAt(rs.getTimestamp("published_at") != null
                                 ? rs.getTimestamp("published_at").toLocalDateTime()
                                 : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
                         .build();
                 return Optional.of(article);
             }
@@ -103,12 +113,72 @@ public class JdbcArticleRepository implements ArticleRepository {
                         .publishedAt(rs.getTimestamp("published_at") != null
                                 ? rs.getTimestamp("published_at").toLocalDateTime()
                                 : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
                         .build());
             }
 
             return articles;
         } catch (SQLException e) {
             throw new StorageException("Failed to fetch all articles", e);
+        }
+    }
+
+    @Override
+    public List<Article> findByStatus(ArticleStatus status) {
+        List<Article> articles = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM articles WHERE status = ?")) {
+            stmt.setString(1, status.name());
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                articles.add(Article.builder()
+                        .title(rs.getString("title"))
+                        .content(rs.getString("content"))
+                        .url(rs.getString("url"))
+                        .author(rs.getString("author"))
+                        .region(rs.getString("region"))
+                        .publishedAt(rs.getTimestamp("published_at") != null
+                                ? rs.getTimestamp("published_at").toLocalDateTime()
+                                : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .build());
+            }
+
+            return articles;
+        } catch (SQLException e) {
+            throw new StorageException("Failed to fetch articles by status", e);
+        }
+    }
+
+    @Override
+    public void update(Article article) {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "UPDATE articles SET title = ?, content = ?, author = ?, region = ?, published_at = ?, " +
+                        "source_name = ?, language = ?, status = ? WHERE url = ?")) {
+            stmt.setString(1, article.getTitle());
+            stmt.setString(2, article.getContent());
+            stmt.setString(3, article.getAuthor());
+            stmt.setString(4, article.getRegion());
+
+            LocalDateTime published = article.getPublishedAt();
+            if (published != null) {
+                stmt.setTimestamp(5, Timestamp.valueOf(published));
+            } else {
+                stmt.setNull(5, Types.TIMESTAMP);
+            }
+
+            stmt.setString(6, article.getSourceName());
+            stmt.setString(7, article.getLanguage());
+            stmt.setString(8, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
+            stmt.setString(9, article.getUrl());
+
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            throw new StorageException("Failed to update article", e);
         }
     }
 

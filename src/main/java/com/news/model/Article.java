@@ -33,5 +33,7 @@ public class Article {
     private String imageUrl;
     @ToString.Exclude
     private String language;
+    @ToString.Exclude
+    private ArticleStatus status;
 }
 

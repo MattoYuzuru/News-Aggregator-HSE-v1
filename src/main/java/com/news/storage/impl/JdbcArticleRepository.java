@@ -158,7 +158,7 @@ public class JdbcArticleRepository implements ArticleRepository {
     public void update(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "UPDATE articles SET title = ?, content = ?, author = ?, region = ?, published_at = ?, " +
-                        "source_name = ?, language = ?, status = ? WHERE url = ?")) {
+                        "source_name = ?, language = ?, status = ?, summary = ? WHERE url = ?")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getAuthor());
@@ -174,7 +174,8 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(6, article.getSourceName());
             stmt.setString(7, article.getLanguage());
             stmt.setString(8, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
-            stmt.setString(9, article.getUrl());
+            stmt.setString(9, article.getSummary());
+            stmt.setString(10, article.getUrl());
 
             stmt.executeUpdate();
         } catch (SQLException e) {

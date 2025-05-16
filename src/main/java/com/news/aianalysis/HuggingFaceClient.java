@@ -1,6 +1,8 @@
 package com.news.aianalysis;
 
 import com.news.ConfigLoader;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.io.*;
 import java.net.HttpURLConnection;
@@ -15,38 +17,93 @@ public class HuggingFaceClient {
     }
 
     public String summarize(String text) {
-        String model = "facebook/bart-large-cnn";
-        String requestBody = "{\"inputs\": " + quote(text) + "}";
-        String response = post(model, requestBody);
-        return extractField(response, "summary_text");
+        try {
+            String model = "facebook/bart-large-cnn";
+            String requestBody = "{\"inputs\": " + quote(text) + "}";
+            String response = post(model, requestBody);
+
+            if (response.startsWith("[")) {
+                JSONArray jsonArray = new JSONArray(response);
+                if (jsonArray.length() > 0) {
+                    return jsonArray.getJSONObject(0).getString("summary_text");
+                }
+            } else if (response.startsWith("{")) {
+                JSONObject jsonObject = new JSONObject(response);
+                if (jsonObject.has("summary_text")) {
+                    return jsonObject.getString("summary_text");
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error in summarize: " + e.getMessage());
+            return null;
+        }
     }
 
     public String classifyRegion(String text) {
-        String model = "facebook/bart-large-mnli";
-        List<String> labels = ConfigLoader.countries();  // Fix?
-        String jsonLabels = "[\"" + String.join("\", \"", labels) + "\"]";
+        try {
+            String model = "facebook/bart-large-mnli";
+            List<String> labels = ConfigLoader.countries();
+            JSONArray labelsArray = new JSONArray();
+            for (String label : labels) {
+                labelsArray.put(label);
+            }
 
-        String requestBody = String.format(
-                "{\"inputs\": %s, \"parameters\": {\"candidate_labels\": %s}}",
-                quote(text), jsonLabels
-        );
+            JSONObject requestObject = new JSONObject();
+            requestObject.put("inputs", text);
+            JSONObject parameters = new JSONObject();
+            parameters.put("candidate_labels", labelsArray);
+            requestObject.put("parameters", parameters);
 
-        String response = post(model, requestBody);
-        return extractFirstLabel(response);
+            String response = post(model, requestObject.toString());
+            if (!response.isEmpty()) {
+                JSONObject jsonResponse = new JSONObject(response);
+                JSONArray labelsResponse = jsonResponse.getJSONArray("labels");
+                if (!labelsResponse.isEmpty()) {
+                    return labelsResponse.getString(0);
+                }
+            }
+            return null;
+        } catch (Exception e) {
+            System.err.println("Error in classifyRegion: " + e.getMessage());
+            return null;
+        }
     }
 
     public List<String> generateTags(String text) {
-        String model = "facebook/bart-large-mnli";
-        List<String> labels = List.of("Politics", "Economy", "Japan", "Technology", "AI");
-        String jsonLabels = "[\"" + String.join("\", \"", labels) + "\"]";
+        try {
+            String model = "facebook/bart-large-mnli";
+            List<String> labels = List.of("Politics", "Economy", "Japan", "Technology", "AI");
+            JSONArray labelsArray = new JSONArray();
+            for (String label : labels) {
+                labelsArray.put(label);
+            }
 
-        String requestBody = String.format(
-                "{\"inputs\": %s, \"parameters\": {\"candidate_labels\": %s}}",
-                quote(text), jsonLabels
-        );
+            JSONObject requestObject = new JSONObject();
+            requestObject.put("inputs", text);
+            JSONObject parameters = new JSONObject();
+            parameters.put("candidate_labels", labelsArray);
+            requestObject.put("parameters", parameters);
 
-        String response = post(model, requestBody);
-        return extractTopLabels(response, 0.5);
+            String response = post(model, requestObject.toString());
+            if (!response.isEmpty()) {
+                JSONObject jsonResponse = new JSONObject(response);
+                JSONArray labelsResponse = jsonResponse.getJSONArray("labels");
+                JSONArray scoresResponse = jsonResponse.getJSONArray("scores");
+
+                List<String> result = new ArrayList<>();
+                for (int i = 0; i < labelsResponse.length(); i++) {
+                    if (scoresResponse.getDouble(i) >= 0.5) {
+                        result.add(labelsResponse.getString(i));
+                    }
+                }
+                return result;
+            }
+            return new ArrayList<>();
+        } catch (Exception e) {
+            System.err.println("Error in generateTags: " + e.getMessage());
+            return new ArrayList<>();
+        }
     }
 
     private String post(String model, String body) {
@@ -58,14 +115,14 @@ public class HuggingFaceClient {
             conn.setRequestProperty("Authorization", "Bearer " + apiKey);
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
+            conn.setConnectTimeout(30000);  // 30 seconds timeout
+            conn.setReadTimeout(30000);     // 30 seconds timeout
 
-            // First send the request body
             try (OutputStream os = conn.getOutputStream()) {
                 os.write(body.getBytes());
                 os.flush();
             }
 
-            // Then check the response code
             int responseCode = conn.getResponseCode();
             if (responseCode != 200) {
                 System.err.println("HF error: " + responseCode);
@@ -78,7 +135,6 @@ public class HuggingFaceClient {
                 return "";
             }
 
-            // Read the successful response
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
                 StringBuilder sb = new StringBuilder();
                 String line;
@@ -86,67 +142,12 @@ public class HuggingFaceClient {
                 return sb.toString();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.err.println("Network error: " + e.getMessage());
             return "";
         }
     }
 
-    private String extractField(String json, String fieldName) {
-        int index = json.indexOf(fieldName);
-        if (index == -1) return null;
-
-        int start = json.indexOf(":", index) + 1;
-        int quote1 = json.indexOf('"', start);
-        int quote2 = json.indexOf('"', quote1 + 1);
-
-        return quote1 != -1 && quote2 != -1 ? json.substring(quote1 + 1, quote2) : null;
-    }
-
-    private String extractFirstLabel(String json) {
-        int i = json.indexOf("\"labels\"");
-        if (i == -1) return null;
-        int open = json.indexOf("[", i);
-        int quote1 = json.indexOf('"', open);
-        int quote2 = json.indexOf('"', quote1 + 1);
-        return json.substring(quote1 + 1, quote2);
-    }
-
-    private List<String> extractTopLabels(String json, double threshold) {
-        List<String> labels = new ArrayList<>();
-        int i = json.indexOf("\"labels\"");
-        int j = json.indexOf("\"scores\"");
-
-        if (i == -1 || j == -1) return labels;
-
-        List<String> labelList = extractJsonArray(json.substring(i));
-        List<String> scoreList = extractJsonArray(json.substring(j));
-
-        for (int k = 0; k < Math.min(labelList.size(), scoreList.size()); k++) {
-            double score = Double.parseDouble(scoreList.get(k));
-            if (score >= threshold) {
-                labels.add(labelList.get(k));
-            }
-        }
-
-        return labels;
-    }
-
-    private List<String> extractJsonArray(String json) {
-        List<String> result = new ArrayList<>();
-        int open = json.indexOf("[");
-        int close = json.indexOf("]");
-        if (open == -1 || close == -1) return result;
-
-        String content = json.substring(open + 1, close);
-        for (String part : content.split(",")) {
-            String trimmed = part.trim().replace("\"", "");
-            if (!trimmed.isEmpty()) result.add(trimmed);
-        }
-
-        return result;
-    }
-
     private String quote(String str) {
-        return "\"" + str.replace("\"", "\\\"") + "\"";
+        return "\"" + str.replace("\"", "\\\"").replace("\n", "\\n") + "\"";
     }
 }

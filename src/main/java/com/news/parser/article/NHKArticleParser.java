@@ -28,6 +28,7 @@ public class NHKArticleParser implements ArticleEnricher {
             tags.add(keyword.trim());
         }
         article.setTags(tags);
+        article.setLanguage("eng");
         article.setStatus(ArticleStatus.ENRICHED);
     }
 

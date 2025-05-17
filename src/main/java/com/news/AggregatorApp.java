@@ -2,8 +2,7 @@ package com.news;
 
 import com.news.aianalysis.AIAnalysisService;
 import com.news.aianalysis.ArticleAnalyzer;
-import com.news.aianalysis.HuggingFaceArticleAnalyzer;
-import com.news.aianalysis.HuggingFaceClient;
+import com.news.aianalysis.OllamaQwenArticleAnalyzer;
 import com.news.model.Article;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
@@ -71,7 +70,7 @@ public class AggregatorApp {
             }
 
             // 4. Enrich Articles with AI
-            ArticleAnalyzer articleAnalyzer = new HuggingFaceArticleAnalyzer();
+            ArticleAnalyzer articleAnalyzer = new OllamaQwenArticleAnalyzer();
             AIAnalysisService analysisService = new AIAnalysisService(articleRepo, articleAnalyzer);
 
             analysisService.enrichUnanalyzedArticles();

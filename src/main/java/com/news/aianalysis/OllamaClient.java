@@ -1,7 +1,10 @@
 package com.news.aianalysis;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.news.ConfigLoader;
+import okhttp3.OkHttpClient;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.*;
@@ -10,27 +13,49 @@ import java.net.URL;
 import java.util.*;
 
 public class HuggingFaceClient {
+    private static final String API_URL = "https://api-inference.huggingface.co/models/";
+    private final OkHttpClient client;
+    private final String repoId;
     private final String apiKey;
-
-    public HuggingFaceClient(String apiKey) {
-        this.apiKey = apiKey;
-    }
+    private final Double temperature;
+    private final int maxLength;
+    private final int maxRetries;
+    private final long retryDelay;
 
     public String summarize(String text) {
         try {
             String model = "facebook/bart-large-cnn";
-            String requestBody = "{\"inputs\": " + quote(text) + "}";
+
+            // Create a proper JSON request with parameters
+            JSONObject requestObj = new JSONObject();
+            requestObj.put("inputs", text);
+
+            // Add these parameters to handle token limits
+            JSONObject parameters = new JSONObject();
+            parameters.put("max_length", 2000);     // Maximum tokens in output
+            parameters.put("min_length", 30);      // Minimum tokens in output
+            parameters.put("do_sample", false);    // Deterministic generation
+            parameters.put("truncation", true);    // Enable input truncation
+            requestObj.put("parameters", parameters);
+
+            String requestBody = requestObj.toString();
             String response = post(model, requestBody);
 
-            if (response.startsWith("[")) {
-                JSONArray jsonArray = new JSONArray(response);
-                if (jsonArray.length() > 0) {
-                    return jsonArray.getJSONObject(0).getString("summary_text");
-                }
-            } else if (response.startsWith("{")) {
-                JSONObject jsonObject = new JSONObject(response);
-                if (jsonObject.has("summary_text")) {
-                    return jsonObject.getString("summary_text");
+            if (!response.isEmpty()) {
+                try {
+                    if (response.startsWith("[")) {
+                        JSONArray jsonArray = new JSONArray(response);
+                        if (!jsonArray.isEmpty()) {
+                            return jsonArray.getJSONObject(0).getString("summary_text");
+                        }
+                    } else {
+                        JSONObject jsonObject = new JSONObject(response);
+                        if (jsonObject.has("summary_text")) {
+                            return jsonObject.getString("summary_text");
+                        }
+                    }
+                } catch (JSONException e) {
+                    System.err.println("JSON parsing error: " + e.getMessage());
                 }
             }
             return null;
@@ -43,19 +68,23 @@ public class HuggingFaceClient {
     public String classifyRegion(String text) {
         try {
             String model = "facebook/bart-large-mnli";
-            List<String> labels = ConfigLoader.countries();
+
             JSONArray labelsArray = new JSONArray();
-            for (String label : labels) {
-                labelsArray.put(label);
+            List<String> commonPlaces = ConfigLoader.countries();
+            for (String place : commonPlaces) {
+                labelsArray.put(place);
             }
 
             JSONObject requestObject = new JSONObject();
             requestObject.put("inputs", text);
             JSONObject parameters = new JSONObject();
             parameters.put("candidate_labels", labelsArray);
+            parameters.put("truncation", true);
+            parameters.put("max_length", 2048);
             requestObject.put("parameters", parameters);
 
             String response = post(model, requestObject.toString());
+
             if (!response.isEmpty()) {
                 JSONObject jsonResponse = new JSONObject(response);
                 JSONArray labelsResponse = jsonResponse.getJSONArray("labels");
@@ -73,6 +102,7 @@ public class HuggingFaceClient {
     public List<String> generateTags(String text) {
         try {
             String model = "facebook/bart-large-mnli";
+
             List<String> labels = List.of("Politics", "Economy", "Japan", "Technology", "AI");
             JSONArray labelsArray = new JSONArray();
             for (String label : labels) {
@@ -83,6 +113,8 @@ public class HuggingFaceClient {
             requestObject.put("inputs", text);
             JSONObject parameters = new JSONObject();
             parameters.put("candidate_labels", labelsArray);
+            parameters.put("truncation", true);
+            parameters.put("max_length", 512);
             requestObject.put("parameters", parameters);
 
             String response = post(model, requestObject.toString());
@@ -112,7 +144,7 @@ public class HuggingFaceClient {
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 
             conn.setRequestMethod("POST");
-            conn.setRequestProperty("Authorization", "Bearer " + apiKey);
+            conn.setRequestProperty("Authorization", "Bearer " + );
             conn.setRequestProperty("Content-Type", "application/json");
             conn.setDoOutput(true);
             conn.setConnectTimeout(30000);  // 30 seconds timeout

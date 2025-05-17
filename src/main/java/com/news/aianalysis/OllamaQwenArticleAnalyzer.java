@@ -1,6 +1,5 @@
 package com.news.aianalysis;
 
-import com.news.ConfigLoader;
 import com.news.model.Article;
 
 import java.util.ArrayList;
@@ -8,8 +7,7 @@ import java.util.List;
 
 public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
 
-    private final String apiKey = ConfigLoader.getApiKey();
-    private final HuggingFaceClient client = new HuggingFaceClient(apiKey);
+    private final OllamaClient client = new OllamaClient();
 
     @Override
     public EnrichmentResult analyze(Article article) throws InterruptedException {
@@ -18,14 +16,12 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
             return EnrichmentResult.empty();
         }
 
-        String truncatedContent = truncateContent(content);
-
         String summary = null;
         String region = null;
         List<String> tags = new ArrayList<>();
 
         try {
-            summary = client.summarize(truncatedContent);
+            summary = client.summarize(content);
             if (summary != null && !summary.isEmpty()) {
                 System.out.println("Generated summary: " + summary.substring(0, Math.min(50, summary.length())) + "...");
             } else {
@@ -36,7 +32,7 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
         }
 
         try {
-            region = client.classifyRegion(truncatedContent);
+            region = client.classifyRegion(content);
             if (region != null && !region.isEmpty()) {
                 System.out.println("Classified region: " + region);
             } else {
@@ -47,7 +43,7 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
         }
 
         try {
-            List<String> generatedTags = client.generateTags(truncatedContent);
+            List<String> generatedTags = client.generateTags(content);
             if (generatedTags != null && !generatedTags.isEmpty()) {
                 tags = generatedTags;
                 System.out.println("Generated tags: " + tags);
@@ -63,14 +59,5 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
                 .region(region)
                 .tags(tags)
                 .build();
-    }
-
-    // Truncate content to avoid hitting API limits
-    private String truncateContent(String content) {
-        final int MAX_CONTENT_LENGTH = 2000;
-        if (content.length() > MAX_CONTENT_LENGTH) {
-            return content.substring(0, MAX_CONTENT_LENGTH);
-        }
-        return content;
     }
 }

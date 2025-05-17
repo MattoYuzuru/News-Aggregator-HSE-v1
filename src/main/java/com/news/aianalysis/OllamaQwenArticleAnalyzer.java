@@ -5,12 +5,12 @@ import com.news.model.Article;
 import java.util.ArrayList;
 import java.util.List;
 
-public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
+public class OllamaQwenArticleAnalyzer implements ArticleAnalyzer {
 
     private final OllamaClient client = new OllamaClient();
 
     @Override
-    public EnrichmentResult analyze(Article article) throws InterruptedException {
+    public EnrichmentResult analyze(Article article) {
         String content = article.getContent();
         if (content == null || content.isBlank() || content.equals("content")) {
             return EnrichmentResult.empty();
@@ -21,10 +21,8 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
         List<String> tags = new ArrayList<>();
 
         try {
-            summary = client.summarize(content);
-            if (summary != null && !summary.isEmpty()) {
-                System.out.println("Generated summary: " + summary.substring(0, Math.min(50, summary.length())) + "...");
-            } else {
+            summary = OllamaClient.summarize(content);
+            if (summary == null) {
                 System.out.println("Failed to generate summary");
             }
         } catch (Exception e) {
@@ -33,9 +31,7 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
 
         try {
             region = client.classifyRegion(content);
-            if (region != null && !region.isEmpty()) {
-                System.out.println("Classified region: " + region);
-            } else {
+            if (region == null) {
                 System.out.println("Failed to classify region");
             }
         } catch (Exception e) {
@@ -44,10 +40,7 @@ public class HuggingFaceArticleAnalyzer implements ArticleAnalyzer {
 
         try {
             List<String> generatedTags = client.generateTags(content);
-            if (generatedTags != null && !generatedTags.isEmpty()) {
-                tags = generatedTags;
-                System.out.println("Generated tags: " + tags);
-            } else {
+            if (generatedTags == null) {
                 System.out.println("Failed to generate tags");
             }
         } catch (Exception e) {

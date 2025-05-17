@@ -58,16 +58,11 @@ public class AIAnalysisService {
                                 (result.getTags() != null && !result.getTags().isEmpty()))) {
 
                     System.out.println("Successfully analyzed article: " + article.getTitle());
-                    System.out.println("Region: " + result.getRegion());
-                    System.out.println("Tags: " + result.getTags());
-                    System.out.println("Summary length: " +
-                            (result.getSummary() != null ? result.getSummary().length() : 0));
-
                     article.setSummary(result.getSummary());
                     article.setRegion(result.getRegion());
                     article.setTags(result.getTags());
                     article.setStatus(ArticleStatus.ANALYZED);
-
+                    System.out.println("Successfully added new content to the DB");
                     repository.update(article);
                     success = true;
                 } else {
@@ -84,7 +79,6 @@ public class AIAnalysisService {
             }
         }
 
-        // Handle articles that couldn't be processed after all retries
         if (!success) {
             System.err.println("Failed to analyze article after " + MAX_RETRIES + " attempts: " + article.getTitle());
             article.setStatus(ArticleStatus.ERROR);

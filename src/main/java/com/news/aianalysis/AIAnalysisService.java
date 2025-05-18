@@ -3,19 +3,27 @@ package com.news.aianalysis;
 import com.news.model.Article;
 import com.news.model.ArticleStatus;
 import com.news.storage.ArticleRepository;
+import com.news.storage.impl.JdbcArticleTagLinker;
+import com.news.storage.impl.JdbcTagRepository;
 
+import java.sql.Connection;
 import java.util.List;
 
 public class AIAnalysisService {
     private final ArticleRepository repository;
     private final ArticleAnalyzer analyzer;
+    private final JdbcTagRepository tagRepository;
+    private final JdbcArticleTagLinker tagLinker;
     private static final int BATCH_SIZE = 10;  // Process articles in batches
     private static final int INITIAL_DELAY_MS = 5000;  // 5 seconds
     private static final int MAX_RETRIES = 3;
 
-    public AIAnalysisService(ArticleRepository repository, ArticleAnalyzer analyzer) {
+    public AIAnalysisService(ArticleRepository repository, ArticleAnalyzer analyzer, Connection connection) {
         this.repository = repository;
         this.analyzer = analyzer;
+        this.tagRepository = new JdbcTagRepository(connection);
+        this.tagLinker = new JdbcArticleTagLinker(connection);
+
     }
 
     public void enrichUnanalyzedArticles() throws InterruptedException {
@@ -64,6 +72,15 @@ public class AIAnalysisService {
                     article.setStatus(ArticleStatus.ANALYZED);
                     System.out.println("Successfully added new content to the DB");
                     repository.update(article);
+                    if (article.getTags() != null && !article.getTags().isEmpty()) {
+                        int articleId = repository.findIdByUrl(article.getUrl())
+                                .orElseThrow(() -> new IllegalStateException("Article not found after update"));
+
+                        for (String tag : article.getTags()) {
+                            int tagId = tagRepository.getOrCreateTagId(tag);
+                            tagLinker.linkArticleTags(articleId, tagId);
+                        }
+                    }
                     success = true;
                 } else {
                     System.out.println("Incomplete result for article: " + article.getTitle());

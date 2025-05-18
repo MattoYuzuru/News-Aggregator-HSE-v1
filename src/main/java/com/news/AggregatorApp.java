@@ -24,9 +24,9 @@ public class AggregatorApp {
 
     private static List<Article> getArticles(EnrichmentService enrichmentService) {
         List<Parser> parsers = List.of(
-//                new NHKParser(),
-//                new BBCParser(),
-                new NipponParser()
+                new NHKParser(),
+                new NipponParser(),
+                new BBCParser()
         );
 
         ParserService parserService = new ParserService(parsers);
@@ -71,7 +71,7 @@ public class AggregatorApp {
 
             // 4. Enrich Articles with AI
             ArticleAnalyzer articleAnalyzer = new OllamaQwenArticleAnalyzer();
-            AIAnalysisService analysisService = new AIAnalysisService(articleRepo, articleAnalyzer);
+            AIAnalysisService analysisService = new AIAnalysisService(articleRepo, articleAnalyzer, connection);
 
             analysisService.enrichUnanalyzedArticles();
 

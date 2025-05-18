@@ -40,7 +40,9 @@ public class OllamaQwenArticleAnalyzer implements ArticleAnalyzer {
 
         try {
             List<String> generatedTags = client.generateTags(content);
-            if (generatedTags == null) {
+            if (generatedTags != null && !generatedTags.isEmpty()) {
+                tags.addAll(generatedTags);
+            } else {
                 System.out.println("Failed to generate tags");
             }
         } catch (Exception e) {

@@ -9,7 +9,7 @@ public class DatabaseConfig {
         String url = "jdbc:postgresql://localhost:5429/news";
         String user = "keyko";
         String password = "qaplTY123&sdf";
-        System.out.println("Success!");
+        System.out.println("Successfully connected to database!");
         return DriverManager.getConnection(url, user, password);
     }
 }

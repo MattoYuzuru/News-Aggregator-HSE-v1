@@ -1,7 +1,6 @@
 package com.news.aianalysis;
 
 import com.news.model.Article;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,7 +21,7 @@ public class OllamaQwenArticleAnalyzer implements ArticleAnalyzer {
 
         try {
             summary = OllamaClient.summarize(content);
-            if (summary == null) {
+            if (summary.isEmpty()) {
                 System.out.println("Failed to generate summary");
             }
         } catch (Exception e) {
@@ -30,9 +29,12 @@ public class OllamaQwenArticleAnalyzer implements ArticleAnalyzer {
         }
 
         try {
-            region = client.classifyRegion(content);
-            if (region == null) {
-                System.out.println("Failed to classify region");
+            String articleRegion = article.getRegion();
+            if (articleRegion == null || articleRegion.isEmpty()) {
+                region = client.classifyRegion(content);
+                if (region == null || region.isBlank()) {
+                    System.out.println("Failed to classify region");
+                }
             }
         } catch (Exception e) {
             System.err.println("Error classifying region: " + e.getMessage());

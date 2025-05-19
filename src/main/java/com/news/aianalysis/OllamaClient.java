@@ -25,18 +25,8 @@ public class OllamaClient {
                 "Return ONLY the summary, without additional comments or formatting.\n" +
                 "\n" + articleContent;
 
-        String jsonRequest = objectMapper.writeValueAsString(new RequestModel(MODEL, prompt, false));
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        JsonNode jsonNode = objectMapper.readTree(response.body());
-        return jsonNode.has("response") ? jsonNode.get("response").asText() : "Нет поля 'response' в ответе.";
+        JsonNode jsonNode = generateResponse(prompt);
+        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "Нет поля 'response' в ответе.";
     }
 
     public String classifyRegion(String articleContent) throws IOException, InterruptedException {
@@ -48,28 +38,23 @@ public class OllamaClient {
                 "\n" +
                 shortenedContent;
 
-        String jsonRequest = objectMapper.writeValueAsString(new RequestModel(MODEL, prompt, false));
-
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(API_URL))
-                .header("Content-Type", "application/json")
-                .POST(HttpRequest.BodyPublishers.ofString(jsonRequest))
-                .build();
-
-        HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
-        JsonNode jsonNode = objectMapper.readTree(response.body());
-        return jsonNode.has("response") ? jsonNode.get("response").asText() : "No 'response' filed in respond.";
+        JsonNode jsonNode = generateResponse(prompt);
+        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "No 'response' filed in respond.";
     }
 
     public List<String> generateTags(String articleContent) throws IOException, InterruptedException {
         String shortenedContent = shortenArticleByHalf(articleContent);
         String prompt = "Read the article below and generate 1 to 4 relevant tags that best capture the key themes or topics of the article." +
                 " Tags can include significant people, events, organizations, locations, or other important concepts mentioned.\n" +
-                "Return ONLY the tags as a comma-separated list, without explanations.\n" +
+                "Return ONLY the tags as a comma-separated list (like: tag1, tag2), without explanations.\n" +
                 "\n" +
                 shortenedContent;
 
+        JsonNode jsonNode = generateResponse(prompt);
+        return jsonNode.has("response") ? parseTags(cleanResponse(jsonNode.get("response").asText())) : List.of();
+    }
+
+    private static JsonNode generateResponse(String prompt) throws IOException, InterruptedException {
         String jsonRequest = objectMapper.writeValueAsString(new RequestModel(MODEL, prompt, false));
 
         HttpRequest request = HttpRequest.newBuilder()
@@ -80,8 +65,7 @@ public class OllamaClient {
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
 
-        JsonNode jsonNode = objectMapper.readTree(response.body());
-        return jsonNode.has("response") ? parseTags(jsonNode.get("response").asText()) : List.of();
+        return objectMapper.readTree(response.body());
     }
 
     public static String shortenArticleByHalf(String article) {
@@ -96,5 +80,14 @@ public class OllamaClient {
                 .map(String::trim)
                 .filter(tag -> !tag.isEmpty())
                 .collect(Collectors.toList());
+    }
+
+    public static String cleanResponse(String responseText) {
+        String endTag = "</think>";
+        int end = responseText.indexOf(endTag);
+        if (end == -1 || end + endTag.length() >= responseText.length()) {
+            return "";
+        }
+        return responseText.substring(end + endTag.length()).trim();
     }
 }

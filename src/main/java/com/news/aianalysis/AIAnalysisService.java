@@ -14,7 +14,6 @@ public class AIAnalysisService {
     private final ArticleAnalyzer analyzer;
     private final JdbcTagRepository tagRepository;
     private final JdbcArticleTagLinker tagLinker;
-    private static final int BATCH_SIZE = 10;  // Process articles in batches
     private static final int INITIAL_DELAY_MS = 5000;  // 5 seconds
     private static final int MAX_RETRIES = 3;
 
@@ -23,32 +22,13 @@ public class AIAnalysisService {
         this.analyzer = analyzer;
         this.tagRepository = new JdbcTagRepository(connection);
         this.tagLinker = new JdbcArticleTagLinker(connection);
-
     }
 
     public void enrichUnanalyzedArticles() throws InterruptedException {
         List<Article> allArticles = repository.findByStatus(ArticleStatus.ENRICHED);
         System.out.println("Found " + allArticles.size() + " articles to analyze");
-
-        // Process in batches to avoid breaking the API
-        for (int i = 0; i < allArticles.size(); i += BATCH_SIZE) {
-            int end = Math.min(i + BATCH_SIZE, allArticles.size());
-            List<Article> batch = allArticles.subList(i, end);
-            processBatch(batch);
-
-            // Longer delay between batches for rate limits
-            if (end < allArticles.size()) {
-                System.out.println("Waiting between batches...");
-                Thread.sleep(INITIAL_DELAY_MS * 2);
-            }
-        }
-    }
-
-    private void processBatch(List<Article> articles) throws InterruptedException {
-        for (Article article : articles) {
+        for (Article article : allArticles) {
             processArticleWithRetry(article);
-            // Delay between articles within a batch
-            Thread.sleep(INITIAL_DELAY_MS);
         }
     }
 
@@ -62,16 +42,21 @@ public class AIAnalysisService {
 
                 // Check for valid results
                 if (result != null &&
-                        (result.getSummary() != null || result.getRegion() != null ||
-                                (result.getTags() != null && !result.getTags().isEmpty()))) {
+                        (result.getSummary() != null || result.getRegion() != null || result.getTags() != null)) {
 
                     System.out.println("Successfully analyzed article: " + article.getTitle());
                     article.setSummary(result.getSummary());
-                    article.setRegion(result.getRegion());
+
+                    // Update region only if it's not null and not empty (If appeared before)
+                    if (result.getRegion() != null && !result.getRegion().isBlank()) {
+                        article.setRegion(result.getRegion());
+                    }
+
                     article.setTags(result.getTags());
                     article.setStatus(ArticleStatus.ANALYZED);
-                    System.out.println("Successfully added new content to the DB");
+
                     repository.update(article);
+
                     if (article.getTags() != null && !article.getTags().isEmpty()) {
                         int articleId = repository.findIdByUrl(article.getUrl())
                                 .orElseThrow(() -> new IllegalStateException("Article not found after update"));

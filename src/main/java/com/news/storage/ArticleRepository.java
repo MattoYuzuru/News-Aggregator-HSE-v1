@@ -3,7 +3,6 @@ package com.news.storage;
 import com.news.model.Article;
 import com.news.model.ArticleStatus;
 
-import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 

@@ -1,4 +1,10 @@
 package com.news.executor.impl;
 
-public class EnrichCommand {
+import com.news.executor.Command;
+import com.news.model.ParsedCommand;
+
+public class EnrichCommand implements Command {
+    @Override
+    public void execute(ParsedCommand parsedCommand) {
+    }
 }

@@ -1,5 +1,12 @@
 package com.news.executor.impl;
 
-public class HelpCommand {
+import com.news.executor.Command;
+import com.news.model.ParsedCommand;
 
+public class HelpCommand implements Command {
+
+    @Override
+    public void execute(ParsedCommand parsedCommand) {
+
+    }
 }

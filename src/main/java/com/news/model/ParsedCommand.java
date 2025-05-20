@@ -1,10 +1,12 @@
-package com.news.executor;
+package com.news.model;
 
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 
 import java.util.Map;
 
-@Getter
+@Data
+@Builder
 public class ParsedCommand {
     private final String name;
     private final Map<String, String> options;

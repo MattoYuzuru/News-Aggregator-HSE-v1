@@ -17,6 +17,13 @@ public class CommandRegistry {
         commands.put("parse", new ParseCommand());
         commands.put("enrich", new EnrichCommand());
         commands.put("supplement", new SupplementCommand());
+
+        // complete help command
+        commands.put("list", new ListCommand());     // List articles with filtering options
+        commands.put("read", new ReadCommand());     // Read a specific article in detail
+        commands.put("save", new SaveCommand());     // Save articles to database
+        commands.put("clear", new ClearCommand());   // Clear the database
+        commands.put("search", new SearchCommand()); // Search through articles
     }
 
     public Optional<Command> getCommand(String name) {

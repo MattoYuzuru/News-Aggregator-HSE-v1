@@ -2,7 +2,9 @@ package com.news.executor;
 
 import com.news.model.ParsedCommand;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class CommandParser {
@@ -13,7 +15,7 @@ public class CommandParser {
         }
 
         String name = parts[0];
-        Map<String, String> options = new HashMap<>();
+        Map<String, List<String>> options = new HashMap<>();
 
         for (int i = 1; i < parts.length; i++) {
             if (parts[i].startsWith("--")) {
@@ -25,14 +27,19 @@ public class CommandParser {
                     throw new IllegalArgumentException("Invalid option format. Options must have a name after --");
                 }
 
-                // Check if there is a value for this option (not another option / not end of input)
-                if (i + 1 < parts.length && !parts[i + 1].startsWith("--")) {
-                    // Option has a value
-                    String value = parts[++i];
-                    options.put(key, value);
+                List<String> values = new ArrayList<>();
+
+                // Collect all subsequent values until next option or end
+                while (i + 1 < parts.length && !parts[i + 1].startsWith("--")) {
+                    values.add(parts[++i]);
+                }
+
+                if (values.isEmpty()) {
+                    // Option is a flag with no values
+                    options.put(key, List.of("true"));
                 } else {
-                    // Option is a flag
-                    options.put(key, "true");
+                    // Option with one or more values
+                    options.put(key, values);
                 }
             } else {
                 // Handle non-option arguments

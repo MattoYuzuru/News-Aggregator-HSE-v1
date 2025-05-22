@@ -8,7 +8,6 @@ import com.news.parser.ParserService;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.function.Supplier;
 
 import static com.news.parser.ParserService.AVAILABLE_PARSERS;
@@ -16,10 +15,22 @@ import static com.news.parser.ParserService.AVAILABLE_PARSERS;
 public class ParseCommand implements Command {
     @Override
     public void execute(ParsedCommand parsedCommand) {
-        Map<String, String> options = parsedCommand.getOptions();
+        String sourceRaw = "all";
+        Integer limit = null;
 
-        String sourceRaw = options.getOrDefault("source", "all");
-        int limit = Integer.parseInt(options.getOrDefault("limit", "10"));
+        System.out.println(parsedCommand.getOptions());
+
+        if (parsedCommand.hasOption("source")) {
+            sourceRaw = String.join(" ", parsedCommand.getOptionValues("source"));
+        }
+
+        if (parsedCommand.hasOption("limit")) {
+            limit = Integer.parseInt(parsedCommand.getOption("limit"));
+        }
+
+        if (!parsedCommand.hasOption("source") && !parsedCommand.hasOption("limit")) {
+            throw new IllegalArgumentException("Unexpected argument. Use help for options.");
+        }
 
         List<Parser> parsers = getParsers(sourceRaw);
 
@@ -53,5 +64,4 @@ public class ParseCommand implements Command {
 
         return result;
     }
-
 }

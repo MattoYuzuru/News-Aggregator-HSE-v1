@@ -23,16 +23,10 @@ public class ParserService {
         this.limit = limit;
     }
 
-    public ParserService(List<Parser> parsers) {
-        this.parsers = parsers;
-        this.limit = null;
-    }
-
     public List<Article> collectAllArticles() {
         List<Article> all = new ArrayList<>();
 
-        int totalParsers = parsers.size();
-        if (totalParsers == 0) {
+        if (parsers.isEmpty()) {
             return all;
         }
 
@@ -47,6 +41,7 @@ public class ParserService {
             return all;
         }
 
+        int totalParsers = parsers.size();
         int baseLimit = limit / totalParsers;
         int remainder = limit % totalParsers;
 

@@ -1,6 +1,7 @@
 package com.news.parser.source;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
 import com.news.parser.article.NHKArticleParser;
@@ -44,6 +45,7 @@ public class NHKParser implements Parser {
                             .url(url)
                             .sourceName("NHK")
                             .publishedAt(dateConverter(date))
+                            .status(ArticleStatus.RAW)
                             .build());
                 }
             }
@@ -61,6 +63,7 @@ public class NHKParser implements Parser {
                             .url(url)
                             .sourceName("NHK")
                             .publishedAt(dateConverter(dataTime))
+                            .status(ArticleStatus.RAW)
                             .build());
                 }
             }
@@ -80,6 +83,7 @@ public class NHKParser implements Parser {
                             .sourceName("NHK")
                             .language("eng")
                             .publishedAt(dateConverter(dataTime))
+                            .status(ArticleStatus.RAW)
                             .build());
                 }
             }

@@ -1,6 +1,7 @@
 package com.news.parser.source;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
 import com.news.parser.article.NipponArticleParser;
@@ -59,6 +60,7 @@ public class NipponParser implements Parser {
                         .publishedAt(publishedAt)
                         .sourceName("nippon.com")
                         .language("ru")
+                        .status(ArticleStatus.RAW)
                         .build());
             }
         } catch (IOException e) {

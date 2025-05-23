@@ -1,6 +1,7 @@
 package com.news.parser.source;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
 import com.news.parser.article.BBCArticleParser;
@@ -50,6 +51,7 @@ public class BBCParser implements Parser {
                         .region(region)
                         .sourceName("BBC")
                         .language("eng")
+                        .status(ArticleStatus.RAW)
                         .build());
             }
         } catch (IOException e) {

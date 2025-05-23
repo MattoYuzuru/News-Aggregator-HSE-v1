@@ -9,10 +9,18 @@ import com.news.parser.ParserService;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import com.news.storage.DatabaseService;
 
 import static com.news.parser.ParserService.AVAILABLE_PARSERS;
 
 public class ParseCommand implements Command {
+
+    private final DatabaseService databaseService;
+
+    public ParseCommand(DatabaseService databaseService) {
+        this.databaseService = databaseService;
+    }
+
     @Override
     public void execute(ParsedCommand parsedCommand) {
         String sourceRaw = "all";
@@ -37,6 +45,18 @@ public class ParseCommand implements Command {
         ParserService parserService = new ParserService(parsers, limit);
         List<Article> articles = parserService.collectAllArticles();
         System.out.println(articles);
+
+        int savedCount = 0;
+        for (Article article: articles) {
+            try {
+                databaseService.saveArticle(article);
+                savedCount++;
+            } catch (Exception e) {
+                System.err.println("Failed to sace article: " + article.getUrl());
+                e.printStackTrace();
+            }
+        }
+        System.out.println("Successfully parsed and saved " + savedCount + " articles");
     }
 
     private static List<Parser> getParsers(String sourceRaw) {

@@ -4,12 +4,14 @@ import com.news.model.Article;
 import com.news.storage.impl.JdbcArticleRepository;
 import com.news.storage.impl.JdbcArticleTagLinker;
 import com.news.storage.impl.JdbcTagRepository;
+import lombok.Getter;
 
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
 
+@Getter
 public class DatabaseService {
     private final Connection connection;
     private final ArticleRepository articleRepository;

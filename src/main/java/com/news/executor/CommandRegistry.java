@@ -14,7 +14,8 @@ public class CommandRegistry {
         commands.put("help", new HelpCommand());
     }
 
-    public void registerWithDatabaseService(DatabaseService databaseService) {
+    public void
+    registerWithDatabaseService(DatabaseService databaseService) {
         // Register commands that need database access
         commands.put("parse", new ParseCommand(databaseService));
         commands.put("export", new ExportCommand(databaseService));

@@ -13,6 +13,7 @@ public interface ArticleRepository {
     Optional<Integer> findIdByUrl(String url);
     List<Article> findAll();
     List<Article> findByStatus(ArticleStatus status);
-    void update(Article article); // updates article records using AI
+    List<Article> findByStatusAndSource(ArticleStatus status, String source, int limit);
+    void update(Article article);
     void deleteOlderThanDays(int days);
 }

@@ -155,6 +155,44 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     @Override
+    public List<Article> findByStatusAndSource(ArticleStatus status, String source, int limit) {
+        List<Article> articles = new ArrayList<>();
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT * FROM articles WHERE status = ? AND source_name LIKE ? ORDER BY published_at DESC LIMIT ?")) {
+            stmt.setString(1, status.name());
+            stmt.setString(2, "%" + source + "%"); // Using LIKE for partial matching
+            stmt.setInt(3, limit);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                articles.add(buildArticleFromResultSet(rs));
+            }
+
+            return articles;
+        } catch (SQLException e) {
+            throw new StorageException("Failed to fetch articles by status and source", e);
+        }
+    }
+
+    // Helper method to avoid duplicate code when building Article objects
+    private Article buildArticleFromResultSet(ResultSet rs) throws SQLException {
+        return Article.builder()
+                .title(rs.getString("title"))
+                .content(rs.getString("content"))
+                .url(rs.getString("url"))
+                .author(rs.getString("author"))
+                .region(rs.getString("region"))
+                .publishedAt(rs.getTimestamp("published_at") != null
+                        ? rs.getTimestamp("published_at").toLocalDateTime()
+                        : null)
+                .sourceName(rs.getString("source_name"))
+                .language(rs.getString("language"))
+                .status(ArticleStatus.valueOf(rs.getString("status")))
+                .summary(rs.getString("summary"))
+                .build();
+    }
+
+    @Override
     public void update(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "UPDATE articles SET title = ?, content = ?, author = ?, region = ?, published_at = ?, " +

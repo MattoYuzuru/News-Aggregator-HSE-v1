@@ -44,6 +44,8 @@ public class HelpCommand implements Command {
         System.out.println("  supplement  Add supplementary information to articles");
         System.out.println("             Usage: supplement [options]");
         System.out.println();
+        System.out.println("  exit      Close program");
+        System.out.println();
         System.out.println("For more details on a specific command, run: help --command COMMAND_NAME");
     }
 
@@ -82,7 +84,7 @@ public class HelpCommand implements Command {
     private void printEnrichHelp() {
         System.out.println("COMMAND: enrich");
         System.out.println("==============");
-        System.out.println("Enhance articles with additional metadata like categories, entity extraction, etc.");
+        System.out.println("Enhance articles with additional metadata like categories, article content, region, authors, etc.");
         System.out.println();
         System.out.println("OPTIONS:");
         System.out.println("  Use 'help --command enrich' to see available options");

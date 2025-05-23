@@ -96,7 +96,7 @@ public class HelpCommand implements Command {
     private void printSupplementHelp() {
         System.out.println("COMMAND: supplement");
         System.out.println("=================");
-        System.out.println("Add supplementary information to articles, such as related content");
+        System.out.println("Add supplementary information to articles generated using AI, such as summary, tags, region etc");
         System.out.println();
         System.out.println("OPTIONS:");
         System.out.println("  Use 'help --command supplement' to see available options");

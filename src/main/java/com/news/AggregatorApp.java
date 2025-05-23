@@ -71,16 +71,16 @@ public class AggregatorApp {
 
             // 4. Enrich Articles with AI
             ArticleAnalyzer articleAnalyzer = new OllamaQwenArticleAnalyzer();
-            AIAnalysisService analysisService = new AIAnalysisService(articleRepo, articleAnalyzer, connection);
-
-            analysisService.enrichUnanalyzedArticles();
+//            AIAnalysisService analysisService = new AIAnalysisService(articleAnalyzer);
+//
+//            analysisService.analyzeArticles();
 
             articleRepo.findAll().forEach(System.out::println);
 
         } catch (SQLException e) {
             System.err.println("Database error: " + e.getMessage());
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
+//        } catch (InterruptedException e) {
+//            throw new RuntimeException(e);
         }
     }
 }

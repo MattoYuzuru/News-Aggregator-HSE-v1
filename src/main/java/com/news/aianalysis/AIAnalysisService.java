@@ -2,37 +2,42 @@ package com.news.aianalysis;
 
 import com.news.model.Article;
 import com.news.model.ArticleStatus;
-import com.news.storage.ArticleRepository;
-import com.news.storage.impl.JdbcArticleTagLinker;
-import com.news.storage.impl.JdbcTagRepository;
+import com.news.storage.DatabaseService;
 
-import java.sql.Connection;
 import java.util.List;
 
 public class AIAnalysisService {
-    private final ArticleRepository repository;
+    private final DatabaseService databaseService;
     private final ArticleAnalyzer analyzer;
-    private final JdbcTagRepository tagRepository;
-    private final JdbcArticleTagLinker tagLinker;
-    private static final int INITIAL_DELAY_MS = 5000;  // 5 seconds
+    private static final int INITIAL_DELAY_MS = 2500;  // 2.5 seconds
     private static final int MAX_RETRIES = 3;
 
-    public AIAnalysisService(ArticleRepository repository, ArticleAnalyzer analyzer, Connection connection) {
-        this.repository = repository;
+    public AIAnalysisService(DatabaseService databaseService, ArticleAnalyzer analyzer) {
+        this.databaseService = databaseService;
         this.analyzer = analyzer;
-        this.tagRepository = new JdbcTagRepository(connection);
-        this.tagLinker = new JdbcArticleTagLinker(connection);
     }
 
-    public void enrichUnanalyzedArticles() throws InterruptedException {
-        List<Article> allArticles = repository.findByStatus(ArticleStatus.ENRICHED);
-        System.out.println("Found " + allArticles.size() + " articles to analyze");
-        for (Article article : allArticles) {
-            processArticleWithRetry(article);
+    public int analyzeArticles(List<Article> articles) {
+        int successCount = 0;
+
+        System.out.println("Starting AI analysis of " + articles.size() + " articles...");
+
+        for (Article article : articles) {
+            try {
+                if (processArticleWithRetry(article)) {
+                    successCount++;
+                }
+            } catch (InterruptedException e) {
+                System.err.println("Analysis interrupted for article: " + article.getTitle());
+                Thread.currentThread().interrupt(); // Preserve interrupt status
+                break;
+            }
         }
+
+        return successCount;
     }
 
-    private void processArticleWithRetry(Article article) throws InterruptedException {
+    private boolean processArticleWithRetry(Article article) throws InterruptedException {
         int retries = 0;
         boolean success = false;
 
@@ -45,27 +50,27 @@ public class AIAnalysisService {
                         (result.getSummary() != null || result.getRegion() != null || result.getTags() != null)) {
 
                     System.out.println("Successfully analyzed article: " + article.getTitle());
-                    article.setSummary(result.getSummary());
 
-                    // Update region only if it's not null and not empty (If appeared before)
+                    // Update article with AI analysis results
+                    if (result.getSummary() != null) {
+                        article.setSummary(result.getSummary());
+                    }
+
+                    // Update region only if it's not null and not empty
                     if (result.getRegion() != null && !result.getRegion().isBlank()) {
                         article.setRegion(result.getRegion());
                     }
 
-                    article.setTags(result.getTags());
+                    if (result.getTags() != null) {
+                        article.setTags(result.getTags());
+                    }
+
+                    // Update status
                     article.setStatus(ArticleStatus.ANALYZED);
 
-                    repository.update(article);
+                    // Save to database
+                    databaseService.saveArticle(article);
 
-                    if (article.getTags() != null && !article.getTags().isEmpty()) {
-                        int articleId = repository.findIdByUrl(article.getUrl())
-                                .orElseThrow(() -> new IllegalStateException("Article not found after update"));
-
-                        for (String tag : article.getTags()) {
-                            int tagId = tagRepository.getOrCreateTagId(tag);
-                            tagLinker.linkArticleTags(articleId, tagId);
-                        }
-                    }
                     success = true;
                 } else {
                     System.out.println("Incomplete result for article: " + article.getTitle());
@@ -84,7 +89,13 @@ public class AIAnalysisService {
         if (!success) {
             System.err.println("Failed to analyze article after " + MAX_RETRIES + " attempts: " + article.getTitle());
             article.setStatus(ArticleStatus.ERROR);
-            repository.update(article);
+            try {
+                databaseService.saveArticle(article);
+            } catch (Exception e) {
+                System.err.println("Failed to update article status to ERROR: " + e.getMessage());
+            }
         }
+
+        return success;
     }
 }

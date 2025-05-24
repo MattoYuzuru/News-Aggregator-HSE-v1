@@ -12,6 +12,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ListCommand implements Command {
@@ -86,9 +87,40 @@ public class ListCommand implements Command {
         }
 
         if (parsedCommand.hasOption("tag")) {
-            List<String> tags = parsedCommand.getOptionValues("tag");
-            if (tags != null && !tags.isEmpty()) {
-                filterBuilder.tags(tags);
+            List<String> tagValues = parsedCommand.getOptionValues("tag");
+            if (tagValues != null && !tagValues.isEmpty()) {
+                List<String> processedTags = new ArrayList<>();
+
+                StringBuilder currentTag = new StringBuilder();
+                boolean inQuotes = false;
+
+                for (String tagPart : tagValues) {
+                    if (tagPart.startsWith("\"") && !tagPart.endsWith("\"")) {
+                        inQuotes = true;
+                        currentTag.append(tagPart.substring(1));
+                    } else if (inQuotes && tagPart.endsWith("\"")) {
+                        currentTag.append(" ").append(tagPart, 0, tagPart.length() - 1);
+                        processedTags.add(currentTag.toString());
+                        currentTag = new StringBuilder();
+                        inQuotes = false;
+                    } else if (inQuotes) {
+                        currentTag.append(" ").append(tagPart);
+                    } else {
+                        String cleanTag = tagPart;
+                        if (cleanTag.startsWith("\"") && cleanTag.endsWith("\"") && cleanTag.length() >= 2) {
+                            cleanTag = cleanTag.substring(1, cleanTag.length() - 1);
+                        }
+                        processedTags.add(cleanTag);
+                    }
+                }
+
+                if (inQuotes && !currentTag.isEmpty()) {
+                    processedTags.add(currentTag.toString());
+                }
+
+                filterBuilder.tags(processedTags);
+
+                System.out.println("Filtering by tags: " + String.join(", ", processedTags));
             }
         }
 
@@ -152,7 +184,7 @@ public class ListCommand implements Command {
 
             if (article.getPublishedAt() != null) {
                 System.out.println("   Published: " + article.getPublishedAt().format(
-                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm")));
+                        DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
             }
 
             System.out.println("   Status: " + article.getStatus());

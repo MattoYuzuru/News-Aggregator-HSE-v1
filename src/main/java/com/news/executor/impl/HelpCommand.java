@@ -128,6 +128,8 @@ public class HelpCommand implements Command {
         System.out.println("  list --lang ENG");
         System.out.println("  list --author \"John Doe\"");
         System.out.println("  list --today");
+        System.out.println("  list --tag \"Cute cat\"");
+        System.out.println("  list --tag cat dog"); // finds tags cat and dog
         System.out.println("  list --published 2025-05-23");
         System.out.println("  list --limit 5 --lang ENG --source BBC --published 2025-05-23");
     }

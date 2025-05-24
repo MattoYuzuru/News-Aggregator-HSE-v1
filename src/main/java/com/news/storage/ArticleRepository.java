@@ -1,6 +1,7 @@
 package com.news.storage;
 
 import com.news.model.Article;
+import com.news.model.ArticleFilter;
 import com.news.model.ArticleStatus;
 
 import java.util.List;
@@ -15,5 +16,6 @@ public interface ArticleRepository {
     List<Article> findByStatus(ArticleStatus status);
     List<Article> findByStatusAndSource(ArticleStatus status, String source, int limit);
     void update(Article article);
+    List<Article> findArticlesWithFilters(ArticleFilter filter);
     void deleteOlderThanDays(int days);
 }

@@ -123,6 +123,7 @@ public class HelpCommand implements Command {
         System.out.println("  list");
         System.out.println("  list --status ENRICHED");
         System.out.println("  list --limit 12");
+        System.out.println("  list --limit 12 --offset 5");
         System.out.println("  list --source NHK");
         System.out.println("  list --lang ENG");
         System.out.println("  list --author \"John Doe\"");

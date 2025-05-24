@@ -4,6 +4,7 @@ import com.news.model.Article;
 import com.news.model.ArticleStatus;
 import com.news.storage.ArticleRepository;
 import com.news.storage.StorageException;
+import com.news.model.ArticleFilter;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -218,6 +219,97 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new StorageException("Failed to update article", e);
+        }
+    }
+
+    @Override
+    public List<Article> findArticlesWithFilters(ArticleFilter filter) {
+        List<Article> articles = new ArrayList<>();
+        StringBuilder sql = new StringBuilder("SELECT DISTINCT a.* FROM articles a");
+
+        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+            sql.append(" LEFT JOIN article_tags at ON a.id = at.article_id")
+                    .append(" LEFT JOIN tags t ON at.tag_id = t.id");
+        }
+
+        sql.append(" WHERE 1=1"); // always true to simplify adding ANDs
+
+        List<Object> params = new ArrayList<>();
+
+        if (filter.getSource() != null && !filter.getSource().equals("all")) {
+            sql.append(" AND a.source_name LIKE ?");
+            params.add("%" + filter.getSource() + "%");
+        }
+
+        if (filter.getStatus() != null) {
+            sql.append(" AND a.status = ?");
+            params.add(filter.getStatus().name());
+        }
+
+        if (filter.getLanguage() != null && !filter.getLanguage().equals("all")) {
+            sql.append(" AND a.language = ?");
+            params.add(filter.getLanguage());
+        }
+
+        if (filter.getAuthor() != null) {
+            sql.append(" AND a.author LIKE ?");
+            params.add("%" + filter.getAuthor() + "%");
+        }
+
+        if (filter.isTodayOnly()) {
+            LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
+            sql.append(" AND a.published_at BETWEEN ? AND ?");
+            params.add(Timestamp.valueOf(startOfDay));
+            params.add(Timestamp.valueOf(endOfDay));
+        } else {
+            if (filter.getPublishedAfter() != null) {
+                sql.append(" AND a.published_at >= ?");
+                params.add(Timestamp.valueOf(filter.getPublishedAfter()));
+            }
+
+            if (filter.getPublishedBefore() != null) {
+                sql.append(" AND a.published_at <= ?");
+                params.add(Timestamp.valueOf(filter.getPublishedBefore()));
+            }
+        }
+
+        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
+            sql.append(" AND t.name IN (");
+            for (int i = 0; i < filter.getTags().size(); i++) {
+                sql.append(i > 0 ? ", ?" : "?");
+                params.add(filter.getTags().get(i));
+            }
+            sql.append(")");
+        }
+
+        sql.append(" ORDER BY a.").append(filter.getSortBy());
+        sql.append(filter.isAscending() ? " ASC" : " DESC");
+
+        if (filter.getLimit() != null) {
+            sql.append(" LIMIT ?");
+            params.add(filter.getLimit());
+        }
+
+        if (filter.getOffset() != null) {
+            sql.append(" OFFSET ?");
+            params.add(filter.getOffset());
+        }
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < params.size(); i++) {
+                stmt.setObject(i + 1, params.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    articles.add(buildArticleFromResultSet(rs));
+                }
+            }
+
+            return articles;
+        } catch (SQLException e) {
+            throw new StorageException("Failed to fetch articles with filters", e);
         }
     }
 

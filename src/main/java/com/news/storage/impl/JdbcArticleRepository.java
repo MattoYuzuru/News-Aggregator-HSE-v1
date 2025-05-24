@@ -1,10 +1,10 @@
 package com.news.storage.impl;
 
 import com.news.model.Article;
+import com.news.model.ArticleFilter;
 import com.news.model.ArticleStatus;
 import com.news.storage.ArticleRepository;
 import com.news.storage.StorageException;
-import com.news.model.ArticleFilter;
 
 import java.sql.*;
 import java.time.LocalDateTime;
@@ -106,7 +106,71 @@ public class JdbcArticleRepository implements ArticleRepository {
             }
             return Optional.empty();
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article by url", e);
+            throw new StorageException("Failed to find article by id", e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInContent(String substr) {
+        String searchPattern = "%" + substr + "%";
+        String sql = "SELECT * FROM articles WHERE articles.content ILIKE ?";
+        List<Article> articles = new ArrayList<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, searchPattern);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                articles.add(Article.builder()
+                        .title(rs.getString("title"))
+                        .content(rs.getString("content"))
+                        .url(rs.getString("url"))
+                        .author(rs.getString("author"))
+                        .region(rs.getString("region"))
+                        .publishedAt(rs.getTimestamp("published_at") != null
+                                ? rs.getTimestamp("published_at").toLocalDateTime()
+                                : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
+                        .build());
+            }
+
+            return Optional.of(articles);
+        } catch (SQLException e) {
+            throw new StorageException("Failed to find article by substring", e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInTitle(String substr) {
+        String searchPattern = "%" + substr + "%";
+        String sql = "SELECT * FROM articles WHERE articles.title ILIKE ?";
+        List<Article> articles = new ArrayList<>();
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, searchPattern);
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                articles.add(Article.builder()
+                        .title(rs.getString("title"))
+                        .content(rs.getString("content"))
+                        .url(rs.getString("url"))
+                        .author(rs.getString("author"))
+                        .region(rs.getString("region"))
+                        .publishedAt(rs.getTimestamp("published_at") != null
+                                ? rs.getTimestamp("published_at").toLocalDateTime()
+                                : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
+                        .build());
+            }
+
+            return Optional.of(articles);
+        } catch (SQLException e) {
+            throw new StorageException("Failed to find article by substring", e);
         }
     }
 

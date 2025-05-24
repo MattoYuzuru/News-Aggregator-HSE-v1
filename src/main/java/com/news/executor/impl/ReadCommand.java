@@ -78,7 +78,6 @@ public class ReadCommand implements Command {
             System.out.println("Tags: " + String.join(", ", article.getTags()));
         }
 
-        // Summary if available
         if (article.getSummary() != null && !article.getSummary().isBlank()) {
             System.out.println();
             System.out.println(SECTION_DIVIDER);
@@ -87,7 +86,6 @@ public class ReadCommand implements Command {
             System.out.println(article.getSummary());
         }
 
-        // Content section
         if (!hideContent) {
             System.out.println();
             System.out.println(SECTION_DIVIDER);

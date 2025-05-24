@@ -23,6 +23,7 @@ public class HelpCommand implements Command {
                 case "list" -> printListHelp();
                 case "read" -> printReadHelp();
                 case "clear" -> printClearHelp();
+                case "search" -> printSearchHelp();
                 default -> System.out.println("Unknown command: " + command);
             }
         }
@@ -152,5 +153,25 @@ public class HelpCommand implements Command {
         System.out.println("EXAMPLES:");
         System.out.println("  clear --id");
         System.out.println("  clear --all");
+    }
+
+    private void printSearchHelp() {
+        System.out.println("COMMAND: search");
+        System.out.println("===============");
+        System.out.println("Find articles using parts of their title of content");
+        System.out.println();
+        System.out.println("EXAMPLES:");
+        System.out.println("  search --title \"Meow meow meow\"");
+        System.out.println("  search --content \"Lorem ipsum...\"");
+    }
+
+    private void printExitHelp() {
+        System.out.println("COMMAND: exit");
+        System.out.println("===============");
+        System.out.println("Exit from the program with or without saving progress");
+        System.out.println();
+        System.out.println("EXAMPLES:");
+        System.out.println("  exit");
+        System.out.println("  exit --delete");
     }
 }

@@ -176,6 +176,7 @@ public class ListCommand implements Command {
             Article article = articles.get(i);
 
             System.out.println((i + 1) + ". " + article.getTitle());
+            System.out.println("   ID: " + article.getId());
             System.out.println("   Source: " + article.getSourceName());
 
             if (article.getAuthor() != null && !article.getAuthor().isBlank()) {

@@ -21,10 +21,9 @@ public class CommandRegistry {
         commands.put("export", new ExportCommand(databaseService));
         commands.put("enrich", new EnrichCommand(databaseService));
         commands.put("supplement", new SupplementCommand(databaseService));
-
-        // Add new commands for article management
         commands.put("list", new ListCommand(databaseService));
         commands.put("read", new ReadCommand(databaseService));
+        commands.put("search", new SearchCommand(databaseService));
         commands.put("clear", new ClearCommand(databaseService));
     }
 

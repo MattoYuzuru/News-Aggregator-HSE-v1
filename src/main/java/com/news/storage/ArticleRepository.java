@@ -12,6 +12,8 @@ public interface ArticleRepository {
     void saveAll(List<Article> articles);
     Optional<Article> findByUrl(String url);
     Optional<Article> findById(Integer id);
+    Optional<List<Article>> findBySubstrInContent(String substr);
+    Optional<List<Article>> findBySubstrInTitle(String substr);
     Optional<Integer> findIdByUrl(String url);
     List<Article> findAll();
     List<Article> findByStatus(ArticleStatus status);

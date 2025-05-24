@@ -29,17 +29,14 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(3, article.getUrl());
             stmt.setString(4, article.getAuthor());
             stmt.setString(5, article.getRegion());
-
             LocalDateTime published = article.getPublishedAt();
             if (published != null) {
                 stmt.setTimestamp(6, Timestamp.valueOf(published));
             } else {
                 stmt.setNull(6, Types.TIMESTAMP);
             }
-
             stmt.setString(7, article.getSourceName());
             stmt.setString(8, article.getLanguage());
-
             stmt.setString(9, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
 
             stmt.executeUpdate();
@@ -74,6 +71,36 @@ public class JdbcArticleRepository implements ArticleRepository {
                         .sourceName(rs.getString("source_name"))
                         .language(rs.getString("language"))
                         .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
+                        .build();
+                return Optional.of(article);
+            }
+            return Optional.empty();
+        } catch (SQLException e) {
+            throw new StorageException("Failed to find article by url", e);
+        }
+    }
+
+    @Override
+    public Optional<Article> findById(Integer id) {
+        try (PreparedStatement stmt = connection.prepareStatement(
+                "SELECT * FROM articles WHERE id = ?")) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                Article article = Article.builder()
+                        .title(rs.getString("title"))
+                        .content(rs.getString("content"))
+                        .url(rs.getString("url"))
+                        .author(rs.getString("author"))
+                        .region(rs.getString("region"))
+                        .publishedAt(rs.getTimestamp("published_at") != null
+                                ? rs.getTimestamp("published_at").toLocalDateTime()
+                                : null)
+                        .sourceName(rs.getString("source_name"))
+                        .language(rs.getString("language"))
+                        .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
                         .build();
                 return Optional.of(article);
             }
@@ -117,6 +144,7 @@ public class JdbcArticleRepository implements ArticleRepository {
                         .sourceName(rs.getString("source_name"))
                         .language(rs.getString("language"))
                         .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
                         .build());
             }
 
@@ -146,6 +174,7 @@ public class JdbcArticleRepository implements ArticleRepository {
                         .sourceName(rs.getString("source_name"))
                         .language(rs.getString("language"))
                         .status(ArticleStatus.valueOf(rs.getString("status")))
+                        .summary(rs.getString("summary"))
                         .build());
             }
 

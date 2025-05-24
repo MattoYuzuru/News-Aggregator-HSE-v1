@@ -141,7 +141,7 @@ public class HelpCommand implements Command {
         System.out.println();
         System.out.println("EXAMPLES:");
         System.out.println("  read --id 123");
-        System.out.println("  read --id 123 --content ");
+        System.out.println("  read --id 123 --no-content");
     }
 
     private void printClearHelp() {

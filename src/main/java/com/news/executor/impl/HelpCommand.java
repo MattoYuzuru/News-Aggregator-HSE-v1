@@ -24,6 +24,7 @@ public class HelpCommand implements Command {
                 case "read" -> printReadHelp();
                 case "clear" -> printClearHelp();
                 case "search" -> printSearchHelp();
+                case "exit" -> printExitHelp();
                 default -> System.out.println("Unknown command: " + command);
             }
         }

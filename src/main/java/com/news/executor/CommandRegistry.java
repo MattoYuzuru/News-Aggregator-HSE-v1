@@ -25,13 +25,10 @@ public class CommandRegistry {
         commands.put("read", new ReadCommand(databaseService));
         commands.put("search", new SearchCommand(databaseService));
         commands.put("clear", new ClearCommand(databaseService));
+        commands.put("exit", new ExitCommand(databaseService));
     }
 
     public Optional<Command> getCommand(String name) {
         return Optional.ofNullable(commands.get(name));
-    }
-
-    public Map<String, Command> getAllCommands() {
-        return new HashMap<>(commands);
     }
 }

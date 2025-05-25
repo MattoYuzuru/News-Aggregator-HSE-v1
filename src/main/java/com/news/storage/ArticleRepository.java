@@ -10,6 +10,7 @@ import java.util.Optional;
 public interface ArticleRepository {
     void save(Article article);
     void saveAll(List<Article> articles);
+    void deleteById(Integer id);
     Optional<Article> findByUrl(String url);
     Optional<Article> findById(Integer id);
     Optional<List<Article>> findBySubstrInContent(String substr);

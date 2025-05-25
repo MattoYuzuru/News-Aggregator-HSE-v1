@@ -15,12 +15,9 @@ public class ClearCommand implements Command {
 
     @Override
     public void execute(ParsedCommand parsedCommand) {
-        if (parsedCommand.hasOption("delete")) {
-            try {
-                databaseService.cleanupDatabase();
-            } catch (SQLException e) {
-                System.out.println("Error while cleaning up");
-            }
+        if (parsedCommand.hasOption("id")) {
+            Integer id = Integer.parseInt(parsedCommand.getOption("id"));
+            databaseService.getArticleRepository().deleteById(id);
         }
     }
 }

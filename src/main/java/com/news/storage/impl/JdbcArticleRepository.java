@@ -53,6 +53,30 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     @Override
+    public void deleteById(Integer id) {
+        try (
+                PreparedStatement deleteTags = connection.prepareStatement(
+                        "DELETE FROM article_tags WHERE article_id = ?"
+                );
+                PreparedStatement deleteArticle = connection.prepareStatement(
+                        "DELETE FROM articles WHERE id = ?"
+                )
+        ) {
+            deleteTags.setInt(1, id);
+            deleteTags.executeUpdate();
+
+            deleteArticle.setInt(1, id);
+            int affectedRows = deleteArticle.executeUpdate();
+
+            if (affectedRows == 0) {
+                throw new StorageException("No article found with id: " + id, null);
+            }
+        } catch (SQLException e) {
+            throw new StorageException("Failed to delete article by id", e);
+        }
+    }
+
+    @Override
     public Optional<Article> findByUrl(String url) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT * FROM articles WHERE url = ?")) {

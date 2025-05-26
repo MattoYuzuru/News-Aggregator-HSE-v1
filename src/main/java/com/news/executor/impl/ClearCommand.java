@@ -16,8 +16,9 @@ public class ClearCommand implements Command {
     @Override
     public void execute(ParsedCommand parsedCommand) {
         if (parsedCommand.hasOption("id")) {
-            Integer id = Integer.parseInt(parsedCommand.getOption("id"));
+            Long id = Long.parseLong(parsedCommand.getOption("id"));
             databaseService.getArticleRepository().deleteById(id);
+            System.out.println("Successfully deleted article with id: " + id);
         }
     }
 }

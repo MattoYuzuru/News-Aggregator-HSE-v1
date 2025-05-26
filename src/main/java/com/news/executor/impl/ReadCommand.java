@@ -28,9 +28,9 @@ public class ReadCommand implements Command {
 
         boolean hideContent = parsedCommand.hasOption("no-content");
 
-        int id;
+        long id;
         try {
-            id = Integer.parseInt(parsedCommand.getOption("id"));
+            id = Long.parseLong(parsedCommand.getOption("id"));
         } catch (NumberFormatException e) {
             System.err.println("Error: Article ID must be a valid number");
             return;

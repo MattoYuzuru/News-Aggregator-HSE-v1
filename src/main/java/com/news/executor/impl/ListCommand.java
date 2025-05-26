@@ -39,7 +39,7 @@ public class ListCommand implements Command {
                 System.err.println("Invalid limit value. Using default.");
             }
         } else {
-            filterBuilder.limit(50);
+            filterBuilder.limit(10);
         }
 
         if (parsedCommand.hasOption("offset")) {

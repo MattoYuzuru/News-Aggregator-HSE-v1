@@ -1,8 +1,8 @@
 package com.news.executor.impl;
 
-import com.news.aianalysis.AIAnalysisService;
-import com.news.aianalysis.ArticleAnalyzer;
-import com.news.aianalysis.OllamaQwenArticleAnalyzer;
+import com.news.ai.AIAnalysisService;
+import com.news.ai.ArticleAnalyzer;
+import com.news.ai.OllamaQwenArticleAnalyzer;
 import com.news.executor.Command;
 import com.news.model.Article;
 import com.news.model.ArticleStatus;

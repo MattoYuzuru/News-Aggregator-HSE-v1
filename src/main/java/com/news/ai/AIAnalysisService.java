@@ -1,4 +1,4 @@
-package com.news.aianalysis;
+package com.news.ai;
 
 import com.news.model.Article;
 import com.news.model.ArticleStatus;

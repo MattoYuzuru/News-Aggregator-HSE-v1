@@ -1,4 +1,4 @@
-package com.news.aianalysis;
+package com.news.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

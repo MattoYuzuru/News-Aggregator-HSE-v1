@@ -46,13 +46,6 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     @Override
-    public void saveAll(List<Article> articles) {
-        for (Article article : articles) {
-            save(article);
-        }
-    }
-
-    @Override
     public void deleteById(Integer id) {
         try (
                 PreparedStatement deleteTags = connection.prepareStatement(
@@ -269,26 +262,6 @@ public class JdbcArticleRepository implements ArticleRepository {
             return articles;
         } catch (SQLException e) {
             throw new StorageException("Failed to fetch articles by status", e);
-        }
-    }
-
-    @Override
-    public List<Article> findByStatusAndSource(ArticleStatus status, String source, int limit) {
-        List<Article> articles = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT * FROM articles WHERE status = ? AND source_name LIKE ? ORDER BY published_at DESC LIMIT ?")) {
-            stmt.setString(1, status.name());
-            stmt.setString(2, "%" + source + "%"); // Using LIKE for partial matching
-            stmt.setInt(3, limit);
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                articles.add(buildArticleFromResultSet(rs));
-            }
-
-            return articles;
-        } catch (SQLException e) {
-            throw new StorageException("Failed to fetch articles by status and source", e);
         }
     }
 

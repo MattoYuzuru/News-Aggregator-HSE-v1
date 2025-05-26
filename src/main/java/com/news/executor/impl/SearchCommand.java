@@ -25,7 +25,7 @@ public class SearchCommand implements Command {
         if (hasContent == hasTitle) {
             throw new IllegalArgumentException(
                     """
-                            ====================
+                            \n====================
                             Invalid command usage!
                             You must provide exactly one search option:
                               --content <substring>   (search in article content)

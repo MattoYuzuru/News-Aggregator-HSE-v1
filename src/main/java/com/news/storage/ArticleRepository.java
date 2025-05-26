@@ -9,7 +9,6 @@ import java.util.Optional;
 
 public interface ArticleRepository {
     void save(Article article);
-    void saveAll(List<Article> articles);
     void deleteById(Integer id);
     Optional<Article> findByUrl(String url);
     Optional<Article> findById(Integer id);
@@ -18,7 +17,6 @@ public interface ArticleRepository {
     Optional<Integer> findIdByUrl(String url);
     List<Article> findAll();
     List<Article> findByStatus(ArticleStatus status);
-    List<Article> findByStatusAndSource(ArticleStatus status, String source, int limit);
     void update(Article article);
     List<Article> findArticlesWithFilters(ArticleFilter filter);
     void deleteOlderThanDays(int days);

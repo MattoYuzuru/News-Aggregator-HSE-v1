@@ -56,13 +56,15 @@ public class HelpCommand implements Command {
         System.out.println("  read        Show the contents of the article with the provided id");
         System.out.println("              Usage: read --id ARTICLE_ID");
         System.out.println();
-        System.out.println("  save        Save current state or changes");
-        System.out.println("              Usage: save [options]");
+        System.out.println("  search      Search for articles that match your query");
+        System.out.println("              Usage: search --content TEXT");
         System.out.println();
         System.out.println("  clear       Clear specified entities or reset states");
-        System.out.println("              Usage: clear [options]");
+        System.out.println("              Usage: clear --id ARTICLE_ID");
         System.out.println();
         System.out.println("  exit        Close the program");
+        System.out.println("              Usage: exit");
+        System.out.println("              Usage: exit --delete");
         System.out.println();
         System.out.println("For more details on a specific command, run: help --command COMMAND_NAME");
     }

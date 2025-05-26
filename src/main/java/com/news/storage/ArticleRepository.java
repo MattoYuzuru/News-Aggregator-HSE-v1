@@ -9,12 +9,12 @@ import java.util.Optional;
 
 public interface ArticleRepository {
     void save(Article article);
-    void deleteById(Integer id);
+    void deleteById(Long id);
     Optional<Article> findByUrl(String url);
-    Optional<Article> findById(Integer id);
+    Optional<Article> findById(Long id);
     Optional<List<Article>> findBySubstrInContent(String substr);
     Optional<List<Article>> findBySubstrInTitle(String substr);
-    Optional<Integer> findIdByUrl(String url);
+    Optional<Long> findIdByUrl(String url);
     List<Article> findAll();
     List<Article> findByStatus(ArticleStatus status);
     void update(Article article);

@@ -40,7 +40,7 @@ public class DatabaseService {
             }
 
             if (article.getTags() != null && !article.getTags().isEmpty()) {
-                Optional<Integer> articleId = articleRepository.findIdByUrl(article.getUrl());
+                Optional<Long> articleId = articleRepository.findIdByUrl(article.getUrl());
                 if (articleId.isPresent()) {
                     for (String tag : article.getTags()) {
                         int tagId = tagRepository.getOrCreateTagId(tag);

@@ -5,9 +5,12 @@ import com.news.model.ArticleFilter;
 import com.news.model.ArticleStatus;
 import com.news.storage.ArticleRepository;
 import com.news.storage.StorageException;
+import com.news.storage.util.ArticleResultSetMapper;
 
 import java.sql.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,22 +25,26 @@ public class JdbcArticleRepository implements ArticleRepository {
     @Override
     public void save(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO articles (title, content, url, author, region, published_at, source_name, language, status) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
+                "INSERT INTO articles (title, content, url, author, region, published_at, source_name, language, status, summary, image_url) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getUrl());
             stmt.setString(4, article.getAuthor());
             stmt.setString(5, article.getRegion());
+
             LocalDateTime published = article.getPublishedAt();
             if (published != null) {
                 stmt.setTimestamp(6, Timestamp.valueOf(published));
             } else {
                 stmt.setNull(6, Types.TIMESTAMP);
             }
+
             stmt.setString(7, article.getSourceName());
             stmt.setString(8, article.getLanguage());
             stmt.setString(9, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
+            stmt.setString(10, article.getSummary());
+            stmt.setString(11, article.getImageUrl());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -46,248 +53,121 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     @Override
-    public void deleteById(Integer id) {
-        try (
-                PreparedStatement deleteTags = connection.prepareStatement(
-                        "DELETE FROM article_tags WHERE article_id = ?"
-                );
-                PreparedStatement deleteArticle = connection.prepareStatement(
-                        "DELETE FROM articles WHERE id = ?"
-                )
-        ) {
-            deleteTags.setInt(1, id);
-            deleteTags.executeUpdate();
-
-            deleteArticle.setInt(1, id);
-            int affectedRows = deleteArticle.executeUpdate();
-
-            if (affectedRows == 0) {
-                throw new StorageException("No article found with id: " + id, null);
-            }
+    public void deleteById(Long id) {
+        String sql = "DELETE FROM articles WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new StorageException("Failed to delete article by id", e);
+            throw new RuntimeException("Error deleting article with id: " + id, e);
         }
     }
 
     @Override
     public Optional<Article> findByUrl(String url) {
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT * FROM articles WHERE url = ?")) {
+        String sql = "SELECT * FROM articles WHERE url = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, url);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Article article = Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build();
-                return Optional.of(article);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(ArticleResultSetMapper.mapRow(rs));
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article by url", e);
+            throw new RuntimeException("Error finding article by URL: " + url, e);
         }
     }
 
     @Override
-    public Optional<Article> findById(Integer id) {
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT * FROM articles WHERE id = ?")) {
-            stmt.setInt(1, id);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                Article article = Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build();
-                return Optional.of(article);
+    public Optional<Article> findById(Long id) {
+        String sql = "SELECT * FROM articles WHERE id = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, id);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(ArticleResultSetMapper.mapRow(rs));
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article by id", e);
+            throw new RuntimeException("Error finding article by ID: " + id, e);
         }
     }
 
     @Override
     public Optional<List<Article>> findBySubstrInContent(String substr) {
-        String searchPattern = "%" + substr + "%";
-        String sql = "SELECT * FROM articles WHERE articles.content ILIKE ?";
-        List<Article> articles = new ArrayList<>();
-
+        String sql = "SELECT * FROM articles WHERE content LIKE ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, searchPattern);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                articles.add(Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build());
+            stmt.setString(1, "%" + substr + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
             }
-
-            return Optional.of(articles);
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article by substring", e);
+            throw new RuntimeException("Error finding articles by content substring: " + substr, e);
         }
     }
 
     @Override
     public Optional<List<Article>> findBySubstrInTitle(String substr) {
-        String searchPattern = "%" + substr + "%";
-        String sql = "SELECT * FROM articles WHERE articles.title ILIKE ?";
-        List<Article> articles = new ArrayList<>();
-
+        String sql = "SELECT * FROM articles WHERE title LIKE ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setString(1, searchPattern);
-            ResultSet rs = stmt.executeQuery();
-            while (rs.next()) {
-                articles.add(Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build());
+            stmt.setString(1, "%" + substr + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
             }
-
-            return Optional.of(articles);
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article by substring", e);
+            throw new RuntimeException("Error finding articles by title substring: " + substr, e);
         }
     }
 
     @Override
-    public Optional<Integer> findIdByUrl(String url) {
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT id FROM articles WHERE url = ?")) {
+    public Optional<Long> findIdByUrl(String url) {
+        String sql = "SELECT id FROM articles WHERE url = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, url);
-            ResultSet rs = stmt.executeQuery();
-            if (rs.next()) {
-                return Optional.of(rs.getInt("id"));
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next()) {
+                    return Optional.of(rs.getLong("id"));
+                }
+                return Optional.empty();
             }
-            return Optional.empty();
         } catch (SQLException e) {
-            throw new StorageException("Failed to find article ID by URL", e);
+            throw new RuntimeException("Error finding article ID by URL: " + url, e);
         }
     }
 
     @Override
     public List<Article> findAll() {
-        List<Article> articles = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM articles");
+        String sql = "SELECT * FROM articles";
+        try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                articles.add(Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build());
-            }
-
-            return articles;
+            return ArticleResultSetMapper.mapRows(rs);
         } catch (SQLException e) {
-            throw new StorageException("Failed to fetch all articles", e);
+            throw new RuntimeException("Error finding all articles", e);
         }
     }
 
     @Override
     public List<Article> findByStatus(ArticleStatus status) {
-        List<Article> articles = new ArrayList<>();
-        try (PreparedStatement stmt = connection.prepareStatement("SELECT * FROM articles WHERE status = ?")) {
+        String sql = "SELECT * FROM articles WHERE status = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, status.name());
-            ResultSet rs = stmt.executeQuery();
-
-            while (rs.next()) {
-                articles.add(Article.builder()
-                        .title(rs.getString("title"))
-                        .content(rs.getString("content"))
-                        .url(rs.getString("url"))
-                        .author(rs.getString("author"))
-                        .region(rs.getString("region"))
-                        .publishedAt(rs.getTimestamp("published_at") != null
-                                ? rs.getTimestamp("published_at").toLocalDateTime()
-                                : null)
-                        .sourceName(rs.getString("source_name"))
-                        .language(rs.getString("language"))
-                        .status(ArticleStatus.valueOf(rs.getString("status")))
-                        .summary(rs.getString("summary"))
-                        .build());
+            try (ResultSet rs = stmt.executeQuery()) {
+                return ArticleResultSetMapper.mapRows(rs);
             }
-
-            return articles;
         } catch (SQLException e) {
-            throw new StorageException("Failed to fetch articles by status", e);
+            throw new RuntimeException("Error finding articles by status: " + status, e);
         }
-    }
-
-    // Helper method to avoid duplicate code when building Article objects
-    private Article buildArticleFromResultSet(ResultSet rs) throws SQLException {
-        return Article.builder()
-                .title(rs.getString("title"))
-                .content(rs.getString("content"))
-                .url(rs.getString("url"))
-                .author(rs.getString("author"))
-                .region(rs.getString("region"))
-                .publishedAt(rs.getTimestamp("published_at") != null
-                        ? rs.getTimestamp("published_at").toLocalDateTime()
-                        : null)
-                .sourceName(rs.getString("source_name"))
-                .language(rs.getString("language"))
-                .status(ArticleStatus.valueOf(rs.getString("status")))
-                .summary(rs.getString("summary"))
-                .build();
     }
 
     @Override
     public void update(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "UPDATE articles SET title = ?, content = ?, author = ?, region = ?, published_at = ?, " +
-                        "source_name = ?, language = ?, status = ?, summary = ? WHERE url = ?")) {
+                        "source_name = ?, language = ?, status = ?, summary = ?, image_url = ? WHERE url = ?")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getAuthor());
@@ -304,7 +184,8 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(7, article.getLanguage());
             stmt.setString(8, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
             stmt.setString(9, article.getSummary());
-            stmt.setString(10, article.getUrl());
+            stmt.setString(10, article.getImageUrl());
+            stmt.setString(11, article.getUrl());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
@@ -314,54 +195,84 @@ public class JdbcArticleRepository implements ArticleRepository {
 
     @Override
     public List<Article> findArticlesWithFilters(ArticleFilter filter) {
-        List<Article> articles = new ArrayList<>();
-        StringBuilder sql = new StringBuilder("SELECT DISTINCT a.* FROM articles a");
-
-        if (filter.getTags() != null && !filter.getTags().isEmpty()) {
-            sql.append(" LEFT JOIN article_tags at ON a.id = at.article_id")
-                    .append(" LEFT JOIN tags t ON at.tag_id = t.id");
-        }
-
-        sql.append(" WHERE 1=1"); // always true to simplify adding ANDs
-
+        StringBuilder sql = new StringBuilder();
         List<Object> params = new ArrayList<>();
 
-        if (filter.getSource() != null && !filter.getSource().equals("all")) {
-            sql.append(" AND a.source_name LIKE ?");
-            params.add("%" + filter.getSource() + "%");
+        // Check if we need to join with tags table
+        boolean needsTagJoin = filter.getTags() != null && !filter.getTags().isEmpty();
+
+        if (needsTagJoin) {
+            sql.append("SELECT DISTINCT a.* FROM articles a ");
+            sql.append("JOIN article_tags at ON a.id = at.article_id ");
+            sql.append("JOIN tags t ON at.tag_id = t.id ");
+            sql.append("WHERE 1=1");
+        } else {
+            sql.append("SELECT * FROM articles WHERE 1=1");
+        }
+
+        if (filter.getSource() != null) {
+            if (needsTagJoin) {
+                sql.append(" AND a.source_name = ?");
+            } else {
+                sql.append(" AND source_name = ?");
+            }
+            params.add(filter.getSource());
         }
 
         if (filter.getStatus() != null) {
-            sql.append(" AND a.status = ?");
+            if (needsTagJoin) {
+                sql.append(" AND a.status = ?");
+            } else {
+                sql.append(" AND status = ?");
+            }
             params.add(filter.getStatus().name());
         }
 
-        if (filter.getLanguage() != null && !filter.getLanguage().equals("all")) {
-            sql.append(" AND a.language = ?");
+        if (filter.getLanguage() != null) {
+            if (needsTagJoin) {
+                sql.append(" AND a.language = ?");
+            } else {
+                sql.append(" AND language = ?");
+            }
             params.add(filter.getLanguage());
         }
 
         if (filter.getAuthor() != null) {
-            sql.append(" AND a.author LIKE ?");
-            params.add("%" + filter.getAuthor() + "%");
+            if (needsTagJoin) {
+                sql.append(" AND a.author = ?");
+            } else {
+                sql.append(" AND author = ?");
+            }
+            params.add(filter.getAuthor());
+        }
+
+        if (filter.getPublishedAfter() != null) {
+            if (needsTagJoin) {
+                sql.append(" AND a.published_at >= ?");
+            } else {
+                sql.append(" AND published_at >= ?");
+            }
+            params.add(filter.getPublishedAfter());
+        }
+
+        if (filter.getPublishedBefore() != null) {
+            if (needsTagJoin) {
+                sql.append(" AND a.published_at <= ?");
+            } else {
+                sql.append(" AND published_at <= ?");
+            }
+            params.add(filter.getPublishedBefore());
         }
 
         if (filter.isTodayOnly()) {
-            LocalDateTime startOfDay = LocalDateTime.now().toLocalDate().atStartOfDay();
-            LocalDateTime endOfDay = startOfDay.plusDays(1).minusNanos(1);
-            sql.append(" AND a.published_at BETWEEN ? AND ?");
-            params.add(Timestamp.valueOf(startOfDay));
-            params.add(Timestamp.valueOf(endOfDay));
-        } else {
-            if (filter.getPublishedAfter() != null) {
-                sql.append(" AND a.published_at >= ?");
-                params.add(Timestamp.valueOf(filter.getPublishedAfter()));
+            LocalDate today = LocalDate.now();
+            if (needsTagJoin) {
+                sql.append(" AND a.published_at BETWEEN ? AND ?");
+            } else {
+                sql.append(" AND published_at BETWEEN ? AND ?");
             }
-
-            if (filter.getPublishedBefore() != null) {
-                sql.append(" AND a.published_at <= ?");
-                params.add(Timestamp.valueOf(filter.getPublishedBefore()));
-            }
+            params.add(today.atStartOfDay());
+            params.add(today.atTime(LocalTime.MAX));
         }
 
         if (filter.getTags() != null && !filter.getTags().isEmpty()) {
@@ -373,8 +284,14 @@ public class JdbcArticleRepository implements ArticleRepository {
             sql.append(")");
         }
 
-        sql.append(" ORDER BY a.").append(filter.getSortBy());
-        sql.append(filter.isAscending() ? " ASC" : " DESC");
+        if (filter.getSortBy() != null) {
+            if (needsTagJoin) {
+                sql.append(" ORDER BY a.").append(filter.getSortBy());
+            } else {
+                sql.append(" ORDER BY ").append(filter.getSortBy());
+            }
+            sql.append(filter.isAscending() ? " ASC" : " DESC");
+        }
 
         if (filter.getLimit() != null) {
             sql.append(" LIMIT ?");
@@ -388,29 +305,37 @@ public class JdbcArticleRepository implements ArticleRepository {
 
         try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
             for (int i = 0; i < params.size(); i++) {
-                stmt.setObject(i + 1, params.get(i));
+                setParameter(stmt, i + 1, params.get(i));
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
-                while (rs.next()) {
-                    articles.add(buildArticleFromResultSet(rs));
-                }
+                return ArticleResultSetMapper.mapRows(rs);
             }
-
-            return articles;
         } catch (SQLException e) {
-            throw new StorageException("Failed to fetch articles with filters", e);
+            e.printStackTrace();
+            throw new RuntimeException("Error finding articles with filters", e);
         }
     }
 
     @Override
     public void deleteOlderThanDays(int days) {
-        try (PreparedStatement stmt = connection.prepareStatement(
-                "DELETE FROM articles WHERE published_at < (CURRENT_TIMESTAMP - (? * INTERVAL '1 day'))")) {
-            stmt.setInt(1, days);
+        String sql = "DELETE FROM articles WHERE published_at < ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setObject(1, LocalDateTime.now().minusDays(days));
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new StorageException("Failed to delete old articles", e);
+            throw new RuntimeException("Error deleting articles older than " + days + " days", e);
+        }
+    }
+
+    private void setParameter(PreparedStatement stmt, int index, Object value) throws SQLException {
+        switch (value) {
+            case null -> stmt.setNull(index, Types.NULL);
+            case String s -> stmt.setString(index, s);
+            case Long l -> stmt.setLong(index, l);
+            case Integer i -> stmt.setInt(index, i);
+            case Boolean b -> stmt.setBoolean(index, b);
+            default -> stmt.setObject(index, value);
         }
     }
 }

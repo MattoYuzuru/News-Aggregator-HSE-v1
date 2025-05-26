@@ -14,10 +14,10 @@ public class JdbcArticleTagLinker implements ArticleTagLinker {
     }
 
     @Override
-    public void linkArticleTags(int articleId, int tagId) throws SQLException {
+    public void linkArticleTags(long articleId, int tagId) throws SQLException {
         try (PreparedStatement ps = connection.prepareStatement(
                 "INSERT INTO article_tags (article_id, tag_id) VALUES (?, ?) ON CONFLICT DO NOTHING")) {
-            ps.setInt(1, articleId);
+            ps.setLong(1, articleId);
             ps.setInt(2, tagId);
             ps.executeUpdate();
         }

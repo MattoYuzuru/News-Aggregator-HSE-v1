@@ -89,11 +89,12 @@ public class HelpCommand implements Command {
     private void printExportHelp() {
         System.out.println("COMMAND: export");
         System.out.println("===============");
-        System.out.println("Export articles to various formats");
+        System.out.println("\"Export file/files in different formats (JSON, CSV, HTML)");
         System.out.println();
         System.out.println("OPTIONS:");
         System.out.println("  --format FORMAT     Specify output format (CSV, JSON, HTML)");
-        System.out.println("  --output FILEPATH   Path to save the exported file (optional)");
+        System.out.println("  --path FILEPATH   Path to save the exported file (optional)");
+        System.out.println("  --id ID (optional)");
         System.out.println();
         System.out.println("EXAMPLES:");
         System.out.println("  export --format CSV");
@@ -143,6 +144,9 @@ public class HelpCommand implements Command {
         System.out.println("==============");
         System.out.println("Show full content of the article with the given ID");
         System.out.println();
+        System.out.println("OPTIONS:");
+        System.out.println("  --id ID");
+        System.out.println("  --no-content (optional) (just info and summary if present)");
         System.out.println("EXAMPLES:");
         System.out.println("  read --id 123");
         System.out.println("  read --id 123 --no-content");

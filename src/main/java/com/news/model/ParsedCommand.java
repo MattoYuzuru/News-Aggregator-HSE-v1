@@ -29,4 +29,8 @@ public class ParsedCommand {
     public boolean hasOption(String key) {
         return options.containsKey(key);
     }
+
+    public String getOptionOrDefault(String key, String exports) {
+        return options.containsKey(key) ? options.get(key).getFirst() : exports;
+    }
 }

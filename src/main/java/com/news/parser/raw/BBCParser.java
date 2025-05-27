@@ -35,7 +35,9 @@ public class BBCParser implements Parser {
 
                 String url = "https://www.bbc.com" + urlEl.attr("href");
 
+                if (url.contains("/videos") || url.contains("/sport")) continue;
                 if (uniqueArticles.contains(url)) continue; // Skipping duplicated article
+
                 uniqueArticles.add(url);
 
                 Element titleEl = card.selectFirst("h2[data-testid=card-headline]");

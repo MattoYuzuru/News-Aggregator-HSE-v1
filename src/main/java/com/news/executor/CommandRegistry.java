@@ -24,6 +24,7 @@ public class CommandRegistry {
         commands.put("read", new ReadCommand(databaseService));
         commands.put("search", new SearchCommand(databaseService));
         commands.put("clear", new ClearCommand(databaseService));
+        commands.put("stats", new StatsCommand(databaseService));
         commands.put("exit", new ExitCommand(databaseService));
     }
     public void

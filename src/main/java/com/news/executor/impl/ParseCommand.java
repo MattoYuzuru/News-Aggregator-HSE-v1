@@ -22,21 +22,19 @@ public class ParseCommand implements Command {
 
     @Override
     public void execute(ParsedCommand parsedCommand) {
-        String sourceRaw = "all";
+        if (!parsedCommand.hasOption("source")) {
+            throw new IllegalArgumentException("Missing required option '--source'. Use help for more information.");
+        }
+
+        String sourceRaw = String.join(" ", parsedCommand.getOptionValues("source"));
         Integer limit = null;
 
-        System.out.println(parsedCommand.getOptions());
-
-        if (parsedCommand.hasOption("source")) {
-            sourceRaw = String.join(" ", parsedCommand.getOptionValues("source"));
-        }
-
         if (parsedCommand.hasOption("limit")) {
-            limit = Integer.parseInt(parsedCommand.getOption("limit"));
-        }
-
-        if (!parsedCommand.hasOption("source") && !parsedCommand.hasOption("limit")) {
-            throw new IllegalArgumentException("Unexpected argument. Use help for options.");
+            try {
+                limit = Integer.parseInt(parsedCommand.getOption("limit"));
+            } catch (NumberFormatException e) {
+                throw new IllegalArgumentException("Option '--limit' must be a valid integer.");
+            }
         }
 
         List<Parser> parsers = sourceRaw.equalsIgnoreCase("all")
@@ -44,8 +42,7 @@ public class ParseCommand implements Command {
                 : List.of(parserRegistry.getParser(ParserName.valueOf(sourceRaw.toUpperCase())));
 
         ParserService parserService = new ParserService(parsers, limit);
-        List<Article> articles = parserService.collectAllArticles();
-        System.out.println(articles);
+        List<Article> articles = parserService.collectAllArticlesParallel();
 
         int savedCount = 0;
         for (Article article : articles) {

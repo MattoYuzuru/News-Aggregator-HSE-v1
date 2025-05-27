@@ -24,6 +24,7 @@ public class HelpCommand implements Command {
                 case "read" -> printReadHelp();
                 case "clear" -> printClearHelp();
                 case "search" -> printSearchHelp();
+                case "stats" -> printStatsHelp();
                 case "exit" -> printExitHelp();
                 default -> System.out.println("Unknown command: " + command);
             }
@@ -170,6 +171,15 @@ public class HelpCommand implements Command {
         System.out.println("EXAMPLES:");
         System.out.println("  search --title \"Meow meow meow\"");
         System.out.println("  search --content \"Lorem ipsum...\"");
+    }
+
+    private void printStatsHelp() {
+        System.out.println("COMMAND: stats");
+        System.out.println("===============");
+        System.out.println("Show statistics on saved DB data");
+        System.out.println();
+        System.out.println("EXAMPLES:");
+        System.out.println("  stats");
     }
 
     private void printExitHelp() {

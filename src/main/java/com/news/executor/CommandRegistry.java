@@ -21,19 +21,14 @@ public class CommandRegistry {
         commands.put("export", new ExportCommand(databaseService));
         commands.put("enrich", new EnrichCommand(databaseService));
         commands.put("supplement", new SupplementCommand(databaseService));
-
-        // Add new commands for article management
         commands.put("list", new ListCommand(databaseService));
         commands.put("read", new ReadCommand(databaseService));
-        commands.put("save", new SaveCommand(databaseService));
+        commands.put("search", new SearchCommand(databaseService));
         commands.put("clear", new ClearCommand(databaseService));
+        commands.put("exit", new ExitCommand(databaseService));
     }
 
     public Optional<Command> getCommand(String name) {
         return Optional.ofNullable(commands.get(name));
-    }
-
-    public Map<String, Command> getAllCommands() {
-        return new HashMap<>(commands);
     }
 }

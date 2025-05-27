@@ -7,6 +7,7 @@ import com.news.storage.impl.JdbcTagRepository;
 import lombok.Getter;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public class DatabaseService {
             }
 
             if (article.getTags() != null && !article.getTags().isEmpty()) {
-                Optional<Integer> articleId = articleRepository.findIdByUrl(article.getUrl());
+                Optional<Long> articleId = articleRepository.findIdByUrl(article.getUrl());
                 if (articleId.isPresent()) {
                     for (String tag : article.getTags()) {
                         int tagId = tagRepository.getOrCreateTagId(tag);
@@ -101,6 +102,25 @@ public class DatabaseService {
         }
 
         return builder.build();
+    }
+
+    public void cleanupDatabase() throws SQLException {
+        try {
+            try (PreparedStatement stmt = connection.prepareStatement(
+                            "TRUNCATE TABLE articles, article_tags, tags RESTART IDENTITY CASCADE;"
+            )) {
+                stmt.executeUpdate();
+            }
+            connection.commit();
+
+        } catch (SQLException e) {
+            try {
+                connection.rollback();
+            } catch (SQLException rollbackEx) {
+                throw new StorageException("Failed to rollback transaction", rollbackEx);
+            }
+            throw new StorageException("Database error during cleanup", e);
+        }
     }
 
     public void close() {

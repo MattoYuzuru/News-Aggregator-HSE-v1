@@ -1,11 +1,10 @@
 package com.news.executor;
 
 import com.news.model.ParsedCommand;
-
-import java.util.Optional;
-
+import com.news.executor.impl.ExitCommand;
 public class CommandExecutorService {
 
+    private boolean exit = false;
     private final CommandRegistry registry;
 
     public CommandExecutorService(CommandRegistry registry) {
@@ -13,23 +12,29 @@ public class CommandExecutorService {
     }
 
     public void execute(String input) {
-        if (input.isEmpty()) {
+        if (input == null || input.isBlank()) {
             System.out.println("Empty command.");
             return;
         }
 
         ParsedCommand parsedCommand = CommandParser.parse(input);
 
-        Optional<Command> commandOpt = registry.getCommand(parsedCommand.getName());
-        if (commandOpt.isEmpty()) {
-            System.out.println("Unknown command: " + parsedCommand.getName());
-            return;
-        }
+        registry.getCommand(parsedCommand.getName()).ifPresentOrElse(
+                command -> {
+                    try {
+                        command.execute(parsedCommand);
+                        if (command instanceof ExitCommand) {
+                            exit = true;
+                        }
+                    } catch (Exception e) {
+                        System.out.println("Error executing command '" + parsedCommand.getName() + "': " + e.getMessage());
+                    }
+                },
+                () -> System.out.println("Unknown command: " + parsedCommand.getName())
+        );
+    }
 
-        try {
-            commandOpt.get().execute(parsedCommand);
-        } catch (Exception e) {
-            System.out.println("Error executing command: " + e.getMessage());
-        }
+    public boolean shouldExit() {
+        return exit;
     }
 }

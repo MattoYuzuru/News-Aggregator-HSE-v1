@@ -16,13 +16,8 @@ public class CliEngine {
         while (true) {
             System.out.print("> ");
             String input = scanner.nextLine().trim();
-
-            if (input.equalsIgnoreCase("exit") || input.equalsIgnoreCase("quit")) {
-                System.out.println("Goodbye!");
-                break;
-            }
-
             executor.execute(input);
+            if (executor.shouldExit()) break;
         }
     }
 }

@@ -1,67 +1,49 @@
 # News Aggregator V.1
 
-## 📌 Описание
-Новостной агрегатор, сделанный для защиты проекта 1ого курса по предмету Введение в Java,
+## 📌 Description
 
-который автоматически **собирает**, **обрабатывает**, **анализирует** и **фильтрует** новости из различных источников.
+A news aggregator developed as a 1st-year course project for the *Introduction to Java* subject.
 
-## 🚀 Функционал
-- **Сбор** новостей из указанных источников (API, парсинг веб-страниц)
-- Настройка списка новостных источников
-- **Исключение дубликатов** и **очистка контента** от рекламы
-- Классификация по категориям и ключевым словам
-- Создание ключевых слов, резюме статей
-- Сохранение статей в БД
-- Фильтрация и поиск по дате, категории, ключевым словам
-- Относительно удобный консольный интерфейс, реализация через команды
-- **Экспорт** новостей в CSV, JSON, HTML.
-- **Автоматическое обновление новостей** через заданные интервалы.
-- Аналитика (выявление трендов, подсчет упоминаний персон)
+It automatically **collects**, **processes**, **analyzes**, and **filters** news from various sources.
 
-## 🛠️ Технологии
+## 🚀 Features
+- **News collection** from specified sources (XML, web page parsing)
+- Configurable list of news sources
+- **Duplicate removal** and **content cleaning** (e.g., ad stripping)
+- Tag-based classification
+- Tag generation and article summarization
+- Saving articles to a database
+- Filtering by date, search by tags, content, and more
+- Console-based interface with command support
+- **Export** to CSV, JSON, and HTML
+- **Automatic updates** on a schedule
+- Basic statistics
+
+## 🛠️ Technologies
+
 - **Backend**: Java 21
 - **Database**: PostgreSQL
 - **Tools**: Docker, Maven
-- **Парсинг**: JSoup, Apache HttpClient
-- **AI/ML**: OpenAI API, Hugging Face
+- **Parsing**: JSoup
+- **AI/ML**: Ollama (local, for now)
 
-## 📦 Установка и запуск
+## 📦 Setup and Running
 
-1. Клонирование репозитория
-```sh
+1. Clone the repository:
+   ```shell
+   git clone https://github.com/MattoYuzuru/News-Aggregator-HSE-v1.git
+   cd News-Aggregator-HSE-v1
+   ```
+2. Run with Docker:
+    ```shell
+    docker-compose up --build
+    ```
+3. Run manually:
 
-git clone https://github.com/MattoYuzuru/News-Aggregator-HSE-v1.git
-cd News-Aggregator-HSE-v1
-```
-2. Запуск через Docker
-```sh
-
-docker-compose up --build
-```
-3. Запуск вручную
-```sh
-
-mvn clean install  
-java -jar ...
-```
-
-## 📂 Структура проекта
-```text
-News-Aggregator-HSE-v1/
-│── src/main/java/com/news/
-│   │── parser/       # Сбор новостей (парсинг, API-агрегация)
-│   │── processor/    # Обработка данных (фильтрация, NLP)
-│   │── storage/      # Работа с БД (JPA, PostgreSQL)
-│   │── search/       # Поиск, индексация
-│   │── analytics/    # Аналитика (тренды, популярные темы)
-│   │── api/          # REST API
-│── docker-compose.yml
-│── pom.xml           # Зависимости
-│── README.md
-│── LICENSE
-│── tests/
-```
+   ```shell
+   mvn clean install
+   java -cp target/news-parser-1.0.jar com.news.Main
+   ```
 
 ## 📝 Лицензия
 [BSD 2-Clause License](LICENSE)
-

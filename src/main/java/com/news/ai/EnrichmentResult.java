@@ -1,4 +1,4 @@
-package com.news.aianalysis;
+package com.news.ai;
 
 import lombok.Builder;
 import lombok.Data;

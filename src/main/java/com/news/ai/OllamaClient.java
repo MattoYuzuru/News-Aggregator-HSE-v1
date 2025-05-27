@@ -1,4 +1,4 @@
-package com.news.aianalysis;
+package com.news.ai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,9 +9,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+
+import static com.news.storage.impl.JdbcTagRepository.parseTags;
 
 public class OllamaClient {
     private static final String API_URL = "http://localhost:11434/api/generate";
@@ -72,14 +72,6 @@ public class OllamaClient {
         if (article == null || article.isEmpty()) return "";
         int halfLength = article.length() / 2;
         return article.substring(0, halfLength).trim();
-    }
-
-    public static List<String> parseTags(String tagsCommaSeparated) {
-        if (tagsCommaSeparated == null || tagsCommaSeparated.isEmpty()) return List.of();
-        return Arrays.stream(tagsCommaSeparated.split(","))
-                .map(String::trim)
-                .filter(tag -> !tag.isEmpty())
-                .collect(Collectors.toList());
     }
 
     public static String cleanResponse(String responseText) {

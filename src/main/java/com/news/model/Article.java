@@ -16,18 +16,13 @@ public class Article {
     private Long id;
     private String title;
     private String url;
-//    @ToString.Exclude
-    private String content;
     @ToString.Exclude
     private String summary;
-//    @ToString.Exclude
+    private String content;
     private String region;
-//    @ToString.Exclude
     private List<String> tags = new ArrayList<>();
     private LocalDateTime publishedAt;
-//    @ToString.Exclude
     private String author;
-//    @ToString.Exclude
     private String sourceName;
     @ToString.Exclude
     private String imageUrl;

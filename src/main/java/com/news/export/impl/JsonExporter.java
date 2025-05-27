@@ -1,14 +1,19 @@
 package com.news.export.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.news.export.Exporter;
 import com.news.model.Article;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 public class JsonExporter implements Exporter {
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public JsonExporter() {
+        this.objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+    }
 
     @Override
     public String export(List<Article> articles) {

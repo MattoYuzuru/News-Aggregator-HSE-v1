@@ -1,6 +1,7 @@
 package com.news.executor;
 
 import com.news.executor.impl.*;
+import com.news.parser.ParserRegistry;
 import com.news.storage.DatabaseService;
 
 import java.util.HashMap;
@@ -17,15 +18,19 @@ public class CommandRegistry {
     public void
     registerWithDatabaseService(DatabaseService databaseService) {
         // Register commands that need database access
-        commands.put("parse", new ParseCommand(databaseService));
         commands.put("export", new ExportCommand(databaseService));
-        commands.put("enrich", new EnrichCommand(databaseService));
         commands.put("supplement", new SupplementCommand(databaseService));
         commands.put("list", new ListCommand(databaseService));
         commands.put("read", new ReadCommand(databaseService));
         commands.put("search", new SearchCommand(databaseService));
         commands.put("clear", new ClearCommand(databaseService));
         commands.put("exit", new ExitCommand(databaseService));
+    }
+    public void
+    registerWithDatabaseServiceAndParserRegister(DatabaseService databaseService, ParserRegistry parserRegistry) {
+        // Register commands that need database access and parser registry
+        commands.put("parse", new ParseCommand(databaseService, parserRegistry));
+        commands.put("enrich", new EnrichCommand(databaseService, parserRegistry));
     }
 
     public Optional<Command> getCommand(String name) {

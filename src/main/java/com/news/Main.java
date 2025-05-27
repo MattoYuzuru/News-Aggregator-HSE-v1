@@ -3,6 +3,7 @@ package com.news;
 import com.news.executor.CliEngine;
 import com.news.executor.CommandExecutorService;
 import com.news.executor.CommandRegistry;
+import com.news.parser.ParserRegistry;
 import com.news.storage.DatabaseService;
 
 public class Main {
@@ -10,10 +11,12 @@ public class Main {
         try {
             // init db service
             DatabaseService databaseService = new DatabaseService();
+            ParserRegistry parserRegistry = new ParserRegistry();
 
             // reg commands with db access
             CommandRegistry registry = new CommandRegistry();
             registry.registerWithDatabaseService(databaseService);
+            registry.registerWithDatabaseServiceAndParserRegister(databaseService, parserRegistry);
 
             CommandExecutorService executor = new CommandExecutorService(registry);
             CliEngine engine = new CliEngine(executor);

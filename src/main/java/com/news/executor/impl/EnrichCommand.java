@@ -6,19 +6,19 @@ import com.news.model.ArticleStatus;
 import com.news.model.ParsedCommand;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.EnrichmentService;
-import com.news.parser.Parser;
+import com.news.parser.ParserRegistry;
+import com.news.parser.ParserService;
 import com.news.storage.DatabaseService;
 
 import java.util.List;
-import java.util.function.Supplier;
-
-import static com.news.parser.ParserService.AVAILABLE_PARSERS;
 
 public class EnrichCommand implements Command {
     private final DatabaseService databaseService;
+    private final ParserRegistry parserRegistry;
 
-    public EnrichCommand(DatabaseService databaseService) {
+    public EnrichCommand(DatabaseService databaseService, ParserRegistry parserRegistry) {
         this.databaseService = databaseService;
+        this.parserRegistry = parserRegistry;
     }
 
     @Override
@@ -35,11 +35,7 @@ public class EnrichCommand implements Command {
 
         System.out.println("Found " + articles.size() + " articles for enrichment...");
 
-        List<ArticleEnricher> enrichers = AVAILABLE_PARSERS.values().stream()
-                .map(Supplier::get)
-                .map(Parser::getEnricher)
-                .toList();
-
+        List<ArticleEnricher> enrichers = parserRegistry.getAllEnrichers();
         EnrichmentService enrichmentService = new EnrichmentService(enrichers);
 
         enrichmentService.enrichAll(articles);

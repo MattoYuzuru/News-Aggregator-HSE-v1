@@ -1,10 +1,10 @@
-package com.news.parser.source;
+package com.news.parser.raw;
 
 import com.news.model.Article;
 import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
-import com.news.parser.article.BBCArticleParser;
+import com.news.parser.enriched.BBCArticleParser;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

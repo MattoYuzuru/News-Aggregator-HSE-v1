@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 
-import com.news.parser.source.*;
+import com.news.parser.raw.*;
 
 public class ParserService {
     private final List<Parser> parsers;

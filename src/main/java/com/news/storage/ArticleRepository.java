@@ -6,6 +6,7 @@ import com.news.model.ArticleStatus;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Map;
 
 public interface ArticleRepository {
     void save(Article article);
@@ -31,6 +32,18 @@ public interface ArticleRepository {
     long count();
 
     long countByStatus(ArticleStatus status);
+
+    Map<String, Long> countBySource();
+
+    Map<String, Long> countByLanguage();
+
+    Map<String, Map<String, Long>> countBySourceAndStatus();
+
+    Map<String, Long> getDateRangeStats();
+
+    List<String> getTopAuthors(int limit);
+
+    Map<String, Long> getTopTags(int limit);
 
     Optional<List<Article>> findBySubstrInTitle(String substr);
 

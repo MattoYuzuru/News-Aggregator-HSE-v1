@@ -1,40 +1,48 @@
 package com.news.executor;
 
+import com.news.executor.validation.CommandValidator;
+import com.news.executor.validation.ValidationResult;
 import com.news.model.ParsedCommand;
-import com.news.executor.impl.ExitCommand;
-public class CommandExecutorService {
 
-    private boolean exit = false;
-    private final CommandRegistry registry;
+public class CommandExecutor {
+    private final CommandValidator validator;
 
-    public CommandExecutorService(CommandRegistry registry) {
-        this.registry = registry;
+    public CommandExecutor() {
+        this.validator = new CommandValidator();
     }
 
-    public void execute(String input) {
-        if (input == null || input.isBlank()) {
-            System.out.println("Empty command.");
+    public void execute(ValidatableCommand command, ParsedCommand parsedCommand) {
+        ValidationResult result = validator.validate(parsedCommand, command.getCommandSpec());
+
+        if (!result.isValid()) {
+            System.err.println("Command validation failed:");
+            for (String error : result.getErrors()) {
+                System.err.println("  " + error);
+            }
+            System.err.println();
+            printUsage(command);
             return;
         }
 
-        ParsedCommand parsedCommand = CommandParser.parse(input);
-
-        registry.getCommand(parsedCommand.getName()).ifPresentOrElse(
-                command -> {
-                    try {
-                        command.execute(parsedCommand);
-                        if (command instanceof ExitCommand) {
-                            exit = true;
-                        }
-                    } catch (Exception e) {
-                        System.out.println("Error executing command '" + parsedCommand.getName() + "': " + e.getMessage());
-                    }
-                },
-                () -> System.out.println("Unknown command: " + parsedCommand.getName())
-        );
+        try {
+            command.executeValidated(parsedCommand);
+        } catch (Exception e) {
+            System.err.println("Error executing command: " + e.getMessage());
+        }
     }
 
-    public boolean shouldExit() {
-        return exit;
+    private void printUsage(ValidatableCommand command) {
+        var spec = command.getCommandSpec();
+        System.err.println("Usage: " + spec.getName() + " [OPTIONS]");
+        System.err.println(spec.getDescription());
+        System.err.println("Options:");
+
+        for (var option : spec.getOptions()) {
+            String optionStr = "  --" + option.getName();
+            if (option.requiresArgument()) {
+                optionStr += " <arg>";
+            }
+            System.err.println(String.format("%-20s %s", optionStr, option.getDescription()));
+        }
     }
 }

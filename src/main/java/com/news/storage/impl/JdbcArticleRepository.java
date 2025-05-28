@@ -201,7 +201,6 @@ public class JdbcArticleRepository implements ArticleRepository {
         StringBuilder sql = new StringBuilder();
         List<Object> params = new ArrayList<>();
 
-        // Check if we need to join with tags table
         boolean needsTagJoin = filter.getTags() != null && !filter.getTags().isEmpty();
 
         if (needsTagJoin) {
@@ -360,6 +359,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         }
     }
 
+    @Override
     public Map<String, Long> countBySource() {
         String sql = "SELECT source_name, COUNT(*) as count FROM articles WHERE source_name IS NOT NULL GROUP BY source_name ORDER BY count DESC";
         Map<String, Long> sourceCounts = new LinkedHashMap<>();
@@ -376,6 +376,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         return sourceCounts;
     }
 
+    @Override
     public Map<String, Long> countByLanguage() {
         String sql = "SELECT language, COUNT(*) as count FROM articles WHERE language IS NOT NULL GROUP BY language ORDER BY count DESC";
         Map<String, Long> languageCounts = new LinkedHashMap<>();
@@ -392,14 +393,13 @@ public class JdbcArticleRepository implements ArticleRepository {
         return languageCounts;
     }
 
+    @Override
     public Map<String, Map<String, Long>> countBySourceAndStatus() {
-        String sql = """
-        SELECT source_name, status, COUNT(*) as count 
-        FROM articles 
-        WHERE source_name IS NOT NULL 
-        GROUP BY source_name, status 
-        ORDER BY source_name, status
-        """;
+        String sql = "SELECT source_name, status, COUNT(*) as count " +
+                "FROM articles " +
+                "WHERE source_name IS NOT NULL " +
+                "GROUP BY source_name, status " +
+                "ORDER BY source_name, status";
 
         Map<String, Map<String, Long>> sourceStatusCounts = new LinkedHashMap<>();
 
@@ -420,29 +420,61 @@ public class JdbcArticleRepository implements ArticleRepository {
         return sourceStatusCounts;
     }
 
+    @Override
     public Map<String, Long> getDateRangeStats() {
         String sql = """
-        SELECT 
-            CASE 
-                WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
-                WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
-                WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
-                WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
-                ELSE 'Older'
-            END as time_period,
-            COUNT(*) as count
-        FROM articles 
-        WHERE published_at IS NOT NULL
-        GROUP BY time_period
-        ORDER BY 
-            CASE 
-                WHEN time_period = 'Today' THEN 1
-                WHEN time_period = 'This Week' THEN 2
-                WHEN time_period = 'This Month' THEN 3
-                WHEN time_period = 'This Year' THEN 4
-                ELSE 5
-            END
-        """;
+                SELECT 
+                    CASE 
+                        WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                        WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                        WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                        WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                        ELSE 'Older'
+                    END as time_period,
+                    COUNT(*) as count
+                FROM articles 
+                WHERE published_at IS NOT NULL
+                GROUP BY 
+                    CASE 
+                        WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                        WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                        WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                        WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                        ELSE 'Older'
+                    END
+                ORDER BY 
+                    CASE 
+                        WHEN CASE 
+                            WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                            WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                            WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                            WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                            ELSE 'Older'
+                        END = 'Today' THEN 1
+                        WHEN CASE 
+                            WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                            WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                            WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                            WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                            ELSE 'Older'
+                        END = 'This Week' THEN 2
+                        WHEN CASE 
+                            WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                            WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                            WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                            WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                            ELSE 'Older'
+                        END = 'This Month' THEN 3
+                        WHEN CASE 
+                            WHEN published_at >= NOW() - INTERVAL '1 day' THEN 'Today'
+                            WHEN published_at >= NOW() - INTERVAL '7 days' THEN 'This Week'
+                            WHEN published_at >= NOW() - INTERVAL '30 days' THEN 'This Month'
+                            WHEN published_at >= NOW() - INTERVAL '365 days' THEN 'This Year'
+                            ELSE 'Older'
+                        END = 'This Year' THEN 4
+                        ELSE 5
+                    END
+                """;
 
         Map<String, Long> dateStats = new LinkedHashMap<>();
 
@@ -458,6 +490,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         return dateStats;
     }
 
+    @Override
     public List<String> getTopAuthors(int limit) {
         String sql = "SELECT author, COUNT(*) as count FROM articles WHERE author IS NOT NULL GROUP BY author ORDER BY count DESC LIMIT ?";
         List<String> topAuthors = new ArrayList<>();
@@ -476,15 +509,14 @@ public class JdbcArticleRepository implements ArticleRepository {
         return topAuthors;
     }
 
+    @Override
     public Map<String, Long> getTopTags(int limit) {
-        String sql = """
-        SELECT t.name, COUNT(*) as count 
-        FROM tags t 
-        JOIN article_tags at ON t.id = at.tag_id 
-        GROUP BY t.name 
-        ORDER BY count DESC 
-        LIMIT ?
-        """;
+        String sql = "SELECT t.name, COUNT(*) as count " +
+                "FROM tags t " +
+                "JOIN article_tags at ON t.id = at.tag_id " +
+                "GROUP BY t.name " +
+                "ORDER BY count DESC " +
+                "LIMIT ?";
 
         Map<String, Long> topTags = new LinkedHashMap<>();
 

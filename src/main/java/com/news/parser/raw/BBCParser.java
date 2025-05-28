@@ -49,7 +49,6 @@ public class BBCParser implements Parser {
                 articles.add(Article.builder()
                         .title(title)
                         .url(url)
-                        .content("content")
                         .region(region)
                         .sourceName("BBC")
                         .language("eng")

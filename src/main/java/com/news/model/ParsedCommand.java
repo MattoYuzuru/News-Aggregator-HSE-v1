@@ -30,7 +30,7 @@ public class ParsedCommand {
         return options.containsKey(key);
     }
 
-    public String getOptionOrDefault(String key, String exports) {
-        return options.containsKey(key) ? options.get(key).getFirst() : exports;
+    public String getOptionOrDefault(String key, String def) {
+        return options.containsKey(key) ? options.get(key).getFirst() : def;
     }
 }

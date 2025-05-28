@@ -13,7 +13,7 @@ public class ParserRegistry {
     private static final Map<ParserName, Supplier<Parser>> PARSER_SUPPLIERS = Map.of(
             ParserName.NHK, NHKParser::new,
             ParserName.BBC, BBCParser::new,
-            ParserName.nippon, NipponParser::new
+            ParserName.NIPPON, NipponParser::new
     );
 
     public List<Parser> getAllParsers() {

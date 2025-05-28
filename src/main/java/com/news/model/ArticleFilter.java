@@ -65,20 +65,24 @@ public class ArticleFilter {
             return this;
         }
 
-        public void author(String author) {
+        public Builder author(String author) {  // Fixed: now returns Builder
             this.author = author;
+            return this;
         }
 
-        public void publishedAfter(LocalDateTime publishedAfter) {
+        public Builder publishedAfter(LocalDateTime publishedAfter) {  // Fixed: now returns Builder
             this.publishedAfter = publishedAfter;
+            return this;
         }
 
-        public void publishedBefore(LocalDateTime publishedBefore) {
+        public Builder publishedBefore(LocalDateTime publishedBefore) {  // Fixed: now returns Builder
             this.publishedBefore = publishedBefore;
+            return this;
         }
 
-        public void todayOnly(boolean todayOnly) {
+        public Builder todayOnly(boolean todayOnly) {  // Fixed: now returns Builder
             this.todayOnly = todayOnly;
+            return this;
         }
 
         public Builder addTag(String tag) {
@@ -91,20 +95,24 @@ public class ArticleFilter {
             return this;
         }
 
-        public void limit(Integer limit) {
+        public Builder limit(Integer limit) {
             this.limit = limit;
+            return this;
         }
 
-        public void offset(Integer offset) {
+        public Builder offset(Integer offset) {
             this.offset = offset;
+            return this;
         }
 
-        public void sortBy(String sortBy) {
+        public Builder sortBy(String sortBy) {
             this.sortBy = sortBy;
+            return this;
         }
 
-        public void ascending(boolean ascending) {
+        public Builder ascending(boolean ascending) {
             this.ascending = ascending;
+            return this;
         }
 
         public ArticleFilter build() {

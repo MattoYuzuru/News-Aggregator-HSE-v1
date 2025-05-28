@@ -3,20 +3,21 @@ package com.news.storage.util;
 import com.news.model.Article;
 import com.news.model.ArticleStatus;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
-/**
- * Utility class to map SQL ResultSet to Article objects
- */
 public class ArticleResultSetMapper {
+
     public static Article mapRow(ResultSet rs) throws SQLException {
-        return Article.builder()
+        return mapRow(rs, null);
+    }
+
+    public static Article mapRow(ResultSet rs, Connection connection) throws SQLException {
+        Article.ArticleBuilder builder = Article.builder()
                 .id(rs.getLong("id"))
                 .title(rs.getString("title"))
                 .url(rs.getString("url"))
@@ -29,15 +30,41 @@ public class ArticleResultSetMapper {
                 .sourceName(rs.getString("source_name"))
                 .imageUrl(rs.getString("image_url"))
                 .language(rs.getString("language"))
-                .status(ArticleStatus.valueOf(rs.getString("status")))
-                .build();
+                .status(ArticleStatus.valueOf(rs.getString("status")));
+
+        if (connection != null) {
+            builder.tags(loadTagsForArticle(rs.getLong("id"), connection));
+        }
+
+        return builder.build();
     }
 
     public static List<Article> mapRows(ResultSet rs) throws SQLException {
+        return mapRows(rs, null);
+    }
+
+    public static List<Article> mapRows(ResultSet rs, Connection connection) throws SQLException {
         List<Article> articles = new ArrayList<>();
         while (rs.next()) {
-            articles.add(mapRow(rs));
+            articles.add(mapRow(rs, connection));
         }
         return articles;
+    }
+
+    private static List<String> loadTagsForArticle(Long articleId, Connection connection) throws SQLException {
+        List<String> tags = new ArrayList<>();
+        String sql = "SELECT t.name FROM tags t " +
+                "JOIN article_tags at ON t.id = at.tag_id " +
+                "WHERE at.article_id = ?";
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setLong(1, articleId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    tags.add(rs.getString("name"));
+                }
+            }
+        }
+        return tags;
     }
 }

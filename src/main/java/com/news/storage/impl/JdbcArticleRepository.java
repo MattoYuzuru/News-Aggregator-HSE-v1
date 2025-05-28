@@ -55,11 +55,16 @@ public class JdbcArticleRepository implements ArticleRepository {
     @Override
     public void deleteById(Long id) {
         String sql = "DELETE FROM articles WHERE id = ?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
-            stmt.setLong(1, id);
-            stmt.executeUpdate();
-        } catch (SQLException e) {
-            throw new RuntimeException("Error deleting article with id: " + id, e);
+        if (findById(id).isPresent()) {
+            try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+                stmt.setLong(1, id);
+                stmt.executeUpdate();
+                System.out.println("Successfully deleted article with id: " + id);
+            } catch (SQLException e) {
+                throw new RuntimeException("Error deleting article with id: " + id, e);
+            }
+        } else {
+            System.err.println("There is no article with such ID");
         }
     }
 
@@ -70,7 +75,7 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(1, url);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(ArticleResultSetMapper.mapRow(rs));
+                    return Optional.of(ArticleResultSetMapper.mapRow(rs, connection));
                 }
                 return Optional.empty();
             }
@@ -86,7 +91,7 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setLong(1, id);
             try (ResultSet rs = stmt.executeQuery()) {
                 if (rs.next()) {
-                    return Optional.of(ArticleResultSetMapper.mapRow(rs));
+                    return Optional.of(ArticleResultSetMapper.mapRow(rs, connection));
                 }
                 return Optional.empty();
             }
@@ -97,11 +102,11 @@ public class JdbcArticleRepository implements ArticleRepository {
 
     @Override
     public Optional<List<Article>> findBySubstrInContent(String substr) {
-        String sql = "SELECT * FROM articles WHERE content LIKE ?";
+        String sql = "SELECT * FROM articles WHERE content ILIKE ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, "%" + substr + "%");
             try (ResultSet rs = stmt.executeQuery()) {
-                List<Article> articles = ArticleResultSetMapper.mapRows(rs);
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
                 return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
             }
         } catch (SQLException e) {
@@ -111,11 +116,11 @@ public class JdbcArticleRepository implements ArticleRepository {
 
     @Override
     public Optional<List<Article>> findBySubstrInTitle(String substr) {
-        String sql = "SELECT * FROM articles WHERE title LIKE ?";
+        String sql = "SELECT * FROM articles WHERE title ILIKE ?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, "%" + substr + "%");
             try (ResultSet rs = stmt.executeQuery()) {
-                List<Article> articles = ArticleResultSetMapper.mapRows(rs);
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
                 return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
             }
         } catch (SQLException e) {
@@ -144,7 +149,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         String sql = "SELECT * FROM articles";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {
-            return ArticleResultSetMapper.mapRows(rs);
+            return ArticleResultSetMapper.mapRows(rs, connection);
         } catch (SQLException e) {
             throw new RuntimeException("Error finding all articles", e);
         }
@@ -156,7 +161,7 @@ public class JdbcArticleRepository implements ArticleRepository {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, status.name());
             try (ResultSet rs = stmt.executeQuery()) {
-                return ArticleResultSetMapper.mapRows(rs);
+                return ArticleResultSetMapper.mapRows(rs, connection);
             }
         } catch (SQLException e) {
             throw new RuntimeException("Error finding articles by status: " + status, e);
@@ -309,10 +314,9 @@ public class JdbcArticleRepository implements ArticleRepository {
             }
 
             try (ResultSet rs = stmt.executeQuery()) {
-                return ArticleResultSetMapper.mapRows(rs);
+                return ArticleResultSetMapper.mapRows(rs, connection);
             }
         } catch (SQLException e) {
-            e.printStackTrace();
             throw new RuntimeException("Error finding articles with filters", e);
         }
     }
@@ -325,6 +329,148 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException("Error deleting articles older than " + days + " days", e);
+        }
+    }
+
+    @Override
+    public long count() {
+        return 0;
+    }
+
+    @Override
+    public long countByStatus(ArticleStatus status) {
+        return 0;
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInContentAndTitle(String contentSubstr, String titleSubstr) {
+        String sql = "SELECT * FROM articles WHERE content ILIKE ? AND title ILIKE ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, "%" + contentSubstr + "%");
+            stmt.setString(2, "%" + titleSubstr + "%");
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding articles by content and title substrings: " + contentSubstr + ", " + titleSubstr, e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findByTags(List<String> tagNames) {
+        if (tagNames.isEmpty()) return Optional.of(List.of());
+
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT a.* FROM articles a ");
+        sql.append("JOIN article_tags at ON a.id = at.article_id ");
+        sql.append("JOIN tags t ON at.tag_id = t.id ");
+        sql.append("WHERE t.name IN (");
+
+        for (int i = 0; i < tagNames.size(); i++) {
+            sql.append(i > 0 ? ", ?" : "?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            for (int i = 0; i < tagNames.size(); i++) {
+                stmt.setString(i + 1, tagNames.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding articles by tags: " + tagNames, e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInContentAndTitleAndTags(String contentSubstr, String titleSubstr, List<String> tagNames) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT a.* FROM articles a ");
+        sql.append("JOIN article_tags at ON a.id = at.article_id ");
+        sql.append("JOIN tags t ON at.tag_id = t.id ");
+        sql.append("WHERE a.content ILIKE ? AND a.title ILIKE ? AND t.name IN (");
+
+        for (int i = 0; i < tagNames.size(); i++) {
+            sql.append(i > 0 ? ", ?" : "?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            stmt.setString(1, "%" + contentSubstr + "%");
+            stmt.setString(2, "%" + titleSubstr + "%");
+
+            for (int i = 0; i < tagNames.size(); i++) {
+                stmt.setString(i + 3, tagNames.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding articles by content, title and tags", e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInContentAndTags(String contentSubstr, List<String> tagNames) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT a.* FROM articles a ");
+        sql.append("JOIN article_tags at ON a.id = at.article_id ");
+        sql.append("JOIN tags t ON at.tag_id = t.id ");
+        sql.append("WHERE a.content ILIKE ? AND t.name IN (");
+
+        for (int i = 0; i < tagNames.size(); i++) {
+            sql.append(i > 0 ? ", ?" : "?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            stmt.setString(1, "%" + contentSubstr + "%");
+
+            for (int i = 0; i < tagNames.size(); i++) {
+                stmt.setString(i + 2, tagNames.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding articles by content and tags", e);
+        }
+    }
+
+    @Override
+    public Optional<List<Article>> findBySubstrInTitleAndTags(String titleSubstr, List<String> tagNames) {
+        StringBuilder sql = new StringBuilder();
+        sql.append("SELECT DISTINCT a.* FROM articles a ");
+        sql.append("JOIN article_tags at ON a.id = at.article_id ");
+        sql.append("JOIN tags t ON at.tag_id = t.id ");
+        sql.append("WHERE a.title ILIKE ? AND t.name IN (");
+
+        for (int i = 0; i < tagNames.size(); i++) {
+            sql.append(i > 0 ? ", ?" : "?");
+        }
+        sql.append(")");
+
+        try (PreparedStatement stmt = connection.prepareStatement(sql.toString())) {
+            stmt.setString(1, "%" + titleSubstr + "%");
+
+            for (int i = 0; i < tagNames.size(); i++) {
+                stmt.setString(i + 2, tagNames.get(i));
+            }
+
+            try (ResultSet rs = stmt.executeQuery()) {
+                List<Article> articles = ArticleResultSetMapper.mapRows(rs, connection);
+                return articles.isEmpty() ? Optional.empty() : Optional.of(articles);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException("Error finding articles by title and tags", e);
         }
     }
 

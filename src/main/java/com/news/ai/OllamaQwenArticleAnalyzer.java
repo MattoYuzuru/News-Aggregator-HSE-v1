@@ -11,7 +11,7 @@ public class OllamaQwenArticleAnalyzer implements ArticleAnalyzer {
     @Override
     public EnrichmentResult analyze(Article article) {
         String content = article.getContent();
-        if (content == null || content.isBlank() || content.equals("content")) {
+        if (content == null || content.isBlank()) {
             return EnrichmentResult.empty();
         }
 

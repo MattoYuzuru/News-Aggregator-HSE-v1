@@ -3,7 +3,7 @@ package com.news.executor;
 import com.news.executor.validation.CommandValidator;
 import com.news.executor.validation.ValidationResult;
 import com.news.model.ParsedCommand;
-import com.news.executor.impl.ExitCommand;
+import com.news.executor.impl.system.ExitCommand;
 
 public class CommandExecutorService {
     private boolean exit = false;

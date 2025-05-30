@@ -1,6 +1,13 @@
 package com.news.executor;
 
-import com.news.executor.impl.*;
+import com.news.executor.impl.parsing.EnrichCommand;
+import com.news.executor.impl.parsing.ParseCommand;
+import com.news.executor.impl.parsing.SupplementCommand;
+import com.news.executor.impl.system.cron.CronCommand;
+import com.news.executor.impl.system.ExitCommand;
+import com.news.executor.impl.system.export.ExportCommand;
+import com.news.executor.impl.system.HelpCommand;
+import com.news.executor.impl.manip.*;
 import com.news.parser.ParserRegistry;
 import com.news.storage.DatabaseService;
 
@@ -30,6 +37,7 @@ public class CommandRegistry {
     public void registerWithDatabaseServiceAndParserRegister(DatabaseService databaseService, ParserRegistry parserRegistry) {
         commands.put("parse", new ParseCommand(databaseService, parserRegistry));
         commands.put("enrich", new EnrichCommand(databaseService, parserRegistry));
+        commands.put("cron", new CronCommand(databaseService, parserRegistry));
     }
 
     public Optional<Command> getCommand(String name) {

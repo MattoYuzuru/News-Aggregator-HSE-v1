@@ -1,8 +1,8 @@
-package com.news.export.impl;
+package com.news.executor.impl.system.export.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.news.export.Exporter;
+import com.news.executor.impl.system.export.Exporter;
 import com.news.model.Article;
 
 import java.util.List;

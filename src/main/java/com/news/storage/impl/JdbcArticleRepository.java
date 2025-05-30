@@ -330,7 +330,7 @@ public class JdbcArticleRepository implements ArticleRepository {
     }
 
     @Override
-    public long count() {
+    public long countAllArticles() {
         String sql = "SELECT COUNT(*) FROM articles";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
              ResultSet rs = stmt.executeQuery()) {

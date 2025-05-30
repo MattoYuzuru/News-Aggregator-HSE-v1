@@ -1,4 +1,4 @@
-package com.news.executor.impl;
+package com.news.executor.impl.system;
 
 import com.news.executor.Command;
 import com.news.executor.CommandRegistry;
@@ -151,6 +151,7 @@ public class HelpCommand implements ValidatableCommand {
             ⚙️  SYSTEM:
               help       - Display this help (you're here!)
               exit       - Exit the application
+              cron       - Set auto-parsing
            \s
             💡 TIPS:
               • Use 'help --command <name>' for detailed command help

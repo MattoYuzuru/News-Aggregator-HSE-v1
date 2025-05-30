@@ -1,10 +1,8 @@
-package com.news.executor.impl;
+package com.news.executor.impl.system.export;
 
 import com.news.executor.ValidatableCommand;
 import com.news.executor.spec.CommandSpec;
 import com.news.executor.spec.OptionSpec;
-import com.news.export.ExportService;
-import com.news.export.FileService;
 import com.news.model.ExportFormat;
 import com.news.model.ParsedCommand;
 import com.news.storage.DatabaseService;

@@ -1,4 +1,4 @@
-package com.news.export;
+package com.news.executor.impl.system.export;
 
 import java.io.FileOutputStream;
 import java.io.OutputStreamWriter;

@@ -1,4 +1,4 @@
-package com.news.executor.impl;
+package com.news.executor.impl.manip;
 
 import com.news.executor.ValidatableCommand;
 import com.news.executor.spec.CommandSpec;
@@ -46,7 +46,7 @@ public class StatsCommand implements ValidatableCommand {
 
     private void displayBasicStats() {
         try {
-            long totalArticles = databaseService.getArticleRepository().count();
+            long totalArticles = databaseService.getArticleRepository().countAllArticles();
             System.out.printf("📰 Total Articles: %,d%n", totalArticles);
 
             if (totalArticles > 0) {

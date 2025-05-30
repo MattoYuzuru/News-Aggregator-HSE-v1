@@ -1,4 +1,4 @@
-package com.news.export;
+package com.news.executor.impl.system.export;
 
 import com.news.model.Article;
 import com.news.model.ExportFormat;

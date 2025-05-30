@@ -1,4 +1,4 @@
-package com.news.executor.impl;
+package com.news.executor.impl.parsing;
 
 import com.news.ai.AIAnalysisService;
 import com.news.ai.ArticleAnalyzer;

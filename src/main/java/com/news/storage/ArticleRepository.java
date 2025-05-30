@@ -29,7 +29,7 @@ public interface ArticleRepository {
 
     void deleteOlderThanDays(int days);
 
-    long count();
+    long countAllArticles();
 
     long countByStatus(ArticleStatus status);
 

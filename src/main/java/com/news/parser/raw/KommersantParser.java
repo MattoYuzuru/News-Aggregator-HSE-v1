@@ -12,14 +12,14 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.news.ConfigLoader.FORMATTER;
 
 public class KommersantParser implements Parser {
     private final ArticleEnricher enricher = new KommersantArticleParser();
 
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
     private final static String BASE_URL = "https://www.kommersant.ru/sitemaps/";
 
     @Override

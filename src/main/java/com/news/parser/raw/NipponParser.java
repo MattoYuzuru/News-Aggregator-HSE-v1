@@ -12,13 +12,13 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.news.ConfigLoader.FORMATTER;
+
 public class NipponParser implements Parser {
     private static final String SITEMAP_URL = "https://www.nippon.com/ru/articles.xml";
-    private static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     private final ArticleEnricher enricher = new NipponArticleParser();
 

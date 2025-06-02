@@ -1,11 +1,15 @@
 package com.news;
 
 import java.io.FileInputStream;
+import java.time.Duration;
+import java.time.format.DateTimeFormatter;
 import java.util.Properties;
 
 public class ConfigLoader {
 
     public static final int AI_SUPPLEMENT_TIME_PER_ARTICLE = 5;
+    public static final Duration TIMEOUT = Duration.ofSeconds(15);
+    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ISO_OFFSET_DATE_TIME;
 
     public static String getApiKey() {
         try {

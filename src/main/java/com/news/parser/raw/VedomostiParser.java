@@ -1,6 +1,7 @@
 package com.news.parser.raw;
 
 import com.news.model.Article;
+import com.news.model.ArticleStatus;
 import com.news.parser.ArticleEnricher;
 import com.news.parser.Parser;
 import com.news.parser.enriched.VedomostiArticleParser;
@@ -9,12 +10,13 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.WebDriverWait;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+
+import static com.news.ConfigLoader.TIMEOUT;
 
 public class VedomostiParser implements Parser {
 
@@ -24,7 +26,6 @@ public class VedomostiParser implements Parser {
             "/science",
             "/technologies"
     );
-    private static final Duration TIMEOUT = Duration.ofSeconds(15);
 
     private final ArticleEnricher enricher = new VedomostiArticleParser();
 
@@ -52,7 +53,6 @@ public class VedomostiParser implements Parser {
         List<Article> sectionArticles = new ArrayList<>();
 
         try {
-            System.out.println("Loading page: " + url);
             driver.get(url);
 
             // wait for the page to load completely
@@ -63,8 +63,6 @@ public class VedomostiParser implements Parser {
 
             List<WebElement> articleCards = driver.findElements(By.cssSelector(
                     "div.articles-cards-list__cell > div.grid-cell__body > a"));
-
-            System.out.println("Found " + articleCards.size() + " article cards on " + url);
 
             for (int i = 0; i < articleCards.size(); i++) {
                 WebElement card = articleCards.get(i);
@@ -91,6 +89,9 @@ public class VedomostiParser implements Parser {
                             .title(title)
                             .imageUrl(imageUrl)
                             .author(author)
+                            .language("ru")
+                            .sourceName("vedomosti")
+                            .status(ArticleStatus.RAW)
                             .build();
 
                     sectionArticles.add(article);
@@ -106,7 +107,6 @@ public class VedomostiParser implements Parser {
             driver.quit();
         }
 
-        System.out.println("Successfully parsed " + sectionArticles.size() + " articles from " + url);
         return sectionArticles;
     }
 

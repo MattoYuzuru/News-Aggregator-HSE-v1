@@ -2,8 +2,10 @@ package com.news.parser;
 
 import com.news.model.ParserName;
 import com.news.parser.raw.BBCParser;
+import com.news.parser.raw.KommersantParser;
 import com.news.parser.raw.NHKParser;
 import com.news.parser.raw.NipponParser;
+import com.news.parser.raw.VedomostiParser;
 
 import java.util.List;
 import java.util.Map;
@@ -13,7 +15,9 @@ public class ParserRegistry {
     private static final Map<ParserName, Supplier<Parser>> PARSER_SUPPLIERS = Map.of(
             ParserName.NHK, NHKParser::new,
             ParserName.BBC, BBCParser::new,
-            ParserName.NIPPON, NipponParser::new
+            ParserName.NIPPON, NipponParser::new,
+            ParserName.KOMMERSANT, KommersantParser::new,
+            ParserName.VEDOMOSTI, VedomostiParser::new
     );
 
     public List<Parser> getAllParsers() {

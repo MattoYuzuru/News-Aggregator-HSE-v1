@@ -76,7 +76,7 @@ public class ReadCommand implements ValidatableCommand {
             System.out.println("📅 Published: Unknown date");
         }
 
-        System.out.printf("✍️  Author: %s%n", valueOrUnknown(article.getAuthor()));
+        System.out.printf("✍️ Author: %s%n", valueOrUnknown(article.getAuthor()));
 
         if (article.getRegion() != null && !article.getRegion().isBlank()) {
             System.out.printf("🌍 Region: %s%n", article.getRegion());
@@ -118,7 +118,7 @@ public class ReadCommand implements ValidatableCommand {
 
     private void displayTags(Article article) {
         if (article.getTags() == null || article.getTags().isEmpty()) {
-            System.out.println("🏷️  Tags: [No tags]");
+            System.out.println("🏷️ Tags: [No tags]");
             return;
         }
 

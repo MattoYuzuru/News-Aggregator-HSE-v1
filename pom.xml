@@ -37,6 +37,13 @@
             <version>1.20.1</version>
         </dependency>
 
+        <!-- Selenium for dynamically loaded pages -->
+        <dependency>
+            <groupId>org.seleniumhq.selenium</groupId>
+            <artifactId>selenium-java</artifactId>
+            <version>4.33.0</version>
+        </dependency>
+
         <!-- JPA with Hibernate implementation -->
         <dependency>
             <groupId>org.hibernate.orm</groupId>

@@ -107,7 +107,7 @@ public class DatabaseService {
     public void cleanupDatabase() throws SQLException {
         try {
             try (PreparedStatement stmt = connection.prepareStatement(
-                            "TRUNCATE TABLE articles, article_tags, tags RESTART IDENTITY CASCADE;"
+                    "TRUNCATE TABLE articles, article_tags, tags RESTART IDENTITY CASCADE;"
             )) {
                 stmt.executeUpdate();
             }

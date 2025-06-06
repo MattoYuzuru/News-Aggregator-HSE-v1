@@ -57,7 +57,6 @@ public class JdbcArticleRepository implements ArticleRepository {
             try (PreparedStatement stmt = connection.prepareStatement(sql)) {
                 stmt.setLong(1, id);
                 stmt.executeUpdate();
-                System.out.println("Successfully deleted article with id: " + id);
             } catch (SQLException e) {
                 throw new RuntimeException("Error deleting article with id: " + id, e);
             }

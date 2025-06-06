@@ -1,11 +1,7 @@
 package com.news.parser;
 
 import com.news.model.ParserName;
-import com.news.parser.raw.BBCParser;
-import com.news.parser.raw.KommersantParser;
-import com.news.parser.raw.NHKParser;
-import com.news.parser.raw.NipponParser;
-import com.news.parser.raw.VedomostiParser;
+import com.news.parser.raw.*;
 
 import java.util.List;
 import java.util.Map;
@@ -17,7 +13,8 @@ public class ParserRegistry {
             ParserName.BBC, BBCParser::new,
             ParserName.NIPPON, NipponParser::new,
             ParserName.KOMMERSANT, KommersantParser::new,
-            ParserName.VEDOMOSTI, VedomostiParser::new
+            ParserName.VEDOMOSTI, VedomostiParser::new,
+            ParserName.KEDR, KedrParser::new
     );
 
     public List<Parser> getAllParsers() {

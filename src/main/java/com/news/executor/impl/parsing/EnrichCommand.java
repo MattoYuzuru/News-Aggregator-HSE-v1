@@ -49,7 +49,7 @@ public class EnrichCommand implements ValidatableCommand {
 
         List<ArticleEnricher> enrichers = parserRegistry.getAllEnrichers();
         EnrichmentService enrichmentService = new EnrichmentService(enrichers);
-        List<Article> articlesToEnrich = new ArrayList<>();
+        List<Article> articlesToEnrich;
 
         if (parsedCommand.hasOption("id")) {
             articlesToEnrich = handleEnrichById(parsedCommand);

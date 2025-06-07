@@ -11,7 +11,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.stream.Collectors;
 
 public class ExportService {
     private final ArticleRepository repository;
@@ -27,7 +26,6 @@ public class ExportService {
         if (allArticles.size() > BATCH_SIZE) {
             return exportWithVirtualThreads(allArticles, format);
         } else {
-            // When <= BATCH_SIZE, use usual processing
             return export(allArticles, format);
         }
     }
@@ -40,10 +38,12 @@ public class ExportService {
 
     private String exportWithVirtualThreads(List<Article> articles, ExportFormat format) {
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
-            // Create batches for processing
             List<List<Article>> batches = createBatches(articles);
 
-            // Submit each batch as a virtual thread task
+            if (format == ExportFormat.CSV) {
+                return exportCsvWithBatches(batches, executor);
+            }
+
             List<Future<String>> futures = batches.stream()
                     .map(batch -> executor.submit(() -> {
                         Exporter exporter = ExporterFactory.getExporter(format);
@@ -51,23 +51,56 @@ public class ExportService {
                     }))
                     .toList();
 
-            StringBuilder combinedResult = new StringBuilder();
+            List<String> results = new ArrayList<>();
             for (Future<String> future : futures) {
                 try {
-                    String batchResult = future.get();
-                    combinedResult.append(batchResult);
+                    results.add(future.get());
                 } catch (InterruptedException | ExecutionException e) {
                     throw new RuntimeException("Error processing batch", e);
                 }
             }
 
-            return combineResults(combinedResult.toString(), format);
+            return combineResults(results, format);
 
         } catch (Exception e) {
-            // Fallback
             System.err.println("Virtual thread processing failed: " + e.getMessage());
             return export(articles, format);
         }
+    }
+
+    private String exportCsvWithBatches(List<List<Article>> batches, ExecutorService executor) {
+        StringBuilder combinedCsv = new StringBuilder();
+
+        combinedCsv.append("id,title,url,summary,content,region,tags,publishedAt,author,sourceName,imageUrl,language,status,rating\n");
+
+        List<Future<String>> futures = batches.stream()
+                .map(batch -> executor.submit(() -> {
+                    Exporter exporter = ExporterFactory.getExporter(ExportFormat.CSV);
+                    String result = exporter.export(batch);
+                    String[] lines = result.split("\n");
+                    if (lines.length > 1) {
+                        StringBuilder batchData = new StringBuilder();
+                        for (int i = 1; i < lines.length; i++) {
+                            if (!lines[i].trim().isEmpty()) {
+                                batchData.append(lines[i]).append("\n");
+                            }
+                        }
+                        return batchData.toString();
+                    }
+                    return "";
+                }))
+                .toList();
+
+        for (Future<String> future : futures) {
+            try {
+                String batchResult = future.get();
+                combinedCsv.append(batchResult);
+            } catch (InterruptedException | ExecutionException e) {
+                throw new RuntimeException("Error processing batch", e);
+            }
+        }
+
+        return combinedCsv.toString();
     }
 
     private String export(List<Article> articles, ExportFormat format) {
@@ -76,52 +109,92 @@ public class ExportService {
     }
 
     private List<List<Article>> createBatches(List<Article> articles) {
-        return new ArrayList<>(articles.stream()
-                .collect(Collectors.groupingBy(article -> articles.indexOf(article) / ExportService.BATCH_SIZE))
-                .values());
+        List<List<Article>> batches = new ArrayList<>();
+        for (int i = 0; i < articles.size(); i += BATCH_SIZE) {
+            int end = Math.min(i + BATCH_SIZE, articles.size());
+            batches.add(articles.subList(i, end));
+        }
+        return batches;
     }
 
-    private String combineResults(String results, ExportFormat format) {
+    private String combineResults(List<String> results, ExportFormat format) {
         return switch (format) {
             case JSON -> combineJsonResults(results);
-            case CSV -> combineCsvResults(results);
             case HTML -> combineHtmlResults(results);
+            case CSV -> combineCsvResults(results);
         };
     }
 
-    private String combineJsonResults(String results) {
-        // Remove individual array brackets and create one combined array
-        String cleanResults = results.replaceAll("\\[\\s*\\]", "") // Remove empty arrays
-                .replaceAll("\\[", "")          // Remove opening brackets
-                .replaceAll("\\]", "")          // Remove closing brackets
-                .replaceAll(",\\s*,", ",")      // Clean up double commas
-                .trim();
+    private String combineJsonResults(List<String> results) {
+        StringBuilder combined = new StringBuilder();
+        combined.append("[");
 
-        if (cleanResults.isEmpty()) {
-            return "[]";
+        boolean first = true;
+        for (String result : results) {
+            if (result == null || result.trim().equals("[]")) continue;
+
+            // Remove outer brackets and extract content
+            String content = result.trim();
+            if (content.startsWith("[") && content.endsWith("]")) {
+                content = content.substring(1, content.length() - 1).trim();
+            }
+
+            if (!content.isEmpty()) {
+                if (!first) {
+                    combined.append(",");
+                }
+                combined.append(content);
+                first = false;
+            }
         }
 
-        return "[" + cleanResults + "]";
+        combined.append("]");
+        return combined.toString();
     }
 
-    private String combineCsvResults(String results) {
-        String[] lines = results.split("\n");
+    private String combineCsvResults(List<String> results) {
         StringBuilder combined = new StringBuilder();
+        boolean headerAdded = false;
 
-        for (String line : lines) {
-            if (line.trim().isEmpty()) continue;
-            combined.append(line).append("\n");
+        for (String result : results) {
+            if (result == null || result.trim().isEmpty()) continue;
+
+            String[] lines = result.split("\n");
+            for (int i = 0; i < lines.length; i++) {
+                String line = lines[i].trim();
+                if (line.isEmpty()) continue;
+
+                if (i == 0 && !headerAdded) {
+                    combined.append(line).append("\n");
+                    headerAdded = true;
+                } else if (i > 0) {
+                    combined.append(line).append("\n");
+                }
+            }
         }
 
         return combined.toString();
     }
 
-    private String combineHtmlResults(String results) {
-        // Combine HTML content, removing duplicate HTML wrapper tags if they exist
-        String cleanResults = results.replaceAll("</?html>", "")
-                .replaceAll("</?body>", "")
-                .trim();
+    private String combineHtmlResults(List<String> results) {
+        StringBuilder combined = new StringBuilder();
+        combined.append("<!DOCTYPE html><html><head><title>Articles Export</title></head><body><h1>Articles</h1><ul>");
 
-        return "<html><body>" + cleanResults + "</body></html>";
+        for (String result : results) {
+            if (result == null) continue;
+
+            String content = result;
+            if (content.contains("<ul>") && content.contains("</ul>")) {
+                int start = content.indexOf("<ul>") + 4;
+                int end = content.lastIndexOf("</ul>");
+                if (start < end) {
+                    content = content.substring(start, end);
+                    combined.append(content);
+                }
+            }
+        }
+
+        combined.append("</ul></body></html>");
+        return combined.toString();
     }
 }

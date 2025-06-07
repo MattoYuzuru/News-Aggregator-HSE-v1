@@ -47,7 +47,10 @@ public class AIAnalysisService {
 
                 // Check for valid results
                 if (result != null &&
-                        (result.getSummary() != null || result.getRegion() != null || result.getTags() != null)) {
+                        (result.getSummary() != null ||
+                         result.getRegion() != null ||
+                         result.getTags() != null ||
+                         result.getRating() != null)) {
 
                     System.out.println("Successfully analyzed article: " + article.getTitle());
 
@@ -61,8 +64,14 @@ public class AIAnalysisService {
                         article.setRegion(result.getRegion());
                     }
 
+                    // Update tags if present
                     if (result.getTags() != null) {
                         article.setTags(result.getTags());
+                    }
+
+                    // Add rating evaluation
+                    if (result.getRating() != null) {
+                        article.setRating(result.getRating());
                     }
 
                     // Update status

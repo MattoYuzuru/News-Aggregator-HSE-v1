@@ -2,7 +2,8 @@ package com.news.executor.impl.parsing;
 
 import com.news.ai.AIAnalysisService;
 import com.news.ai.ArticleAnalyzer;
-import com.news.ai.OllamaQwenArticleAnalyzer;
+import com.news.ai.ConfigurableArticleAnalyzer;
+import com.news.ai.config.AIConfiguration;
 import com.news.executor.ValidatableCommand;
 import com.news.executor.spec.CommandSpec;
 import com.news.executor.spec.OptionSpec;
@@ -11,10 +12,7 @@ import com.news.model.ArticleStatus;
 import com.news.model.ParsedCommand;
 import com.news.storage.DatabaseService;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 public class SupplementCommand implements ValidatableCommand {
     private final DatabaseService databaseService;
@@ -27,7 +25,12 @@ public class SupplementCommand implements ValidatableCommand {
                 .description("Add AI-generated supplements to articles")
                 .options(Set.of(
                         OptionSpec.withSingleArg("id", "Supplement article by ID", OptionSpec.OptionType.INTEGER),
-                        OptionSpec.flag("all", "Supplement all ENRICHED articles")
+                        OptionSpec.withSingleArg("model", "AI model to use (default: qwen3:4b)", OptionSpec.OptionType.STRING),
+                        OptionSpec.flag("all", "Supplement all ENRICHED articles"),
+                        OptionSpec.flag("summarize", "Enable summarization"),
+                        OptionSpec.flag("classify-region", "Enable region classification"),
+                        OptionSpec.flag("generate-tags", "Enable tag generation"),
+                        OptionSpec.flag("evaluate", "Enable article evaluation")
                 ))
                 .mutuallyExclusiveGroups(Set.of(Set.of("id", "all")))
                 .build();
@@ -45,7 +48,7 @@ public class SupplementCommand implements ValidatableCommand {
             return;
         }
 
-        List<Article> articlesToSupplement = new ArrayList<>();
+        List<Article> articlesToSupplement;
 
         if (parsedCommand.hasOption("id")) {
             articlesToSupplement = handleSupplementById(parsedCommand);
@@ -57,11 +60,50 @@ public class SupplementCommand implements ValidatableCommand {
             return;
         }
 
-        ArticleAnalyzer articleAnalyzer = new OllamaQwenArticleAnalyzer();
+        // Create AI configuration based on command line options
+        AIConfiguration config = createAIConfiguration(parsedCommand);
+        ArticleAnalyzer articleAnalyzer = new ConfigurableArticleAnalyzer(config);
         AIAnalysisService analysisService = new AIAnalysisService(databaseService, articleAnalyzer);
 
         int savedCount = analysisService.analyzeArticles(articlesToSupplement);
-        System.out.println("Successfully supplemented and updated " + savedCount + " articles");
+        System.out.println("Successfully supplemented and updated " + savedCount + " articles using model: " + config.modelName());
+        System.out.println("Enabled operations: " + config.enabledOperations());
+    }
+
+    private AIConfiguration createAIConfiguration(ParsedCommand parsedCommand) {
+        // Default model
+        String model = parsedCommand.getOption("model");
+        if (model == null || model.isEmpty()) {
+            model = "qwen3:4b";
+        }
+
+        // Determine enabled operations
+        Set<String> enabledOperations = new HashSet<>();
+
+        // If no specific operations are specified, enable all by default
+        boolean hasSpecificOperations = parsedCommand.hasOption("summarize") ||
+                parsedCommand.hasOption("classify-region") ||
+                parsedCommand.hasOption("generate-tags") ||
+                parsedCommand.hasOption("evaluate");
+
+        if (!hasSpecificOperations) {
+            enabledOperations.addAll(Set.of("summarization", "region_classification", "tag_generation"));
+        } else {
+            if (parsedCommand.hasOption("summarize")) {
+                enabledOperations.add("summarization");
+            }
+            if (parsedCommand.hasOption("classify-region")) {
+                enabledOperations.add("region_classification");
+            }
+            if (parsedCommand.hasOption("generate-tags")) {
+                enabledOperations.add("tag_generation");
+            }
+            if (parsedCommand.hasOption("evaluate")) {
+                enabledOperations.add("evaluation");
+            }
+        }
+
+        return new AIConfiguration(model, enabledOperations);
     }
 
     private List<Article> handleSupplementById(ParsedCommand parsedCommand) {

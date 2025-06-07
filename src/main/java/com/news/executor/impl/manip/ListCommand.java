@@ -237,6 +237,7 @@ public class ListCommand implements ValidatableCommand {
 
             System.out.printf("📰 %d. %s%n", (i + 1), article.getTitle());
             System.out.printf("   🆔 ID: %d%n", article.getId());
+            System.out.printf("   😃 Relevancy rate: %d%n", article.getRating());
             System.out.printf("   🏢 Source: %s%n", article.getSourceName() != null ? article.getSourceName() : "Unknown");
 
             if (article.getAuthor() != null && !article.getAuthor().isBlank()) {

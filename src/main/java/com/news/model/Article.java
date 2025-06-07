@@ -30,5 +30,6 @@ public class Article {
     private String language;
     @ToString.Exclude
     private ArticleStatus status;
+    private Integer rating;
 }
 

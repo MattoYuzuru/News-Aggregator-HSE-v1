@@ -73,7 +73,8 @@ public class DatabaseService {
                 .region(newArticle.getRegion() != null ? newArticle.getRegion() : existing.getRegion())
                 .publishedAt(newArticle.getPublishedAt() != null ? newArticle.getPublishedAt() : existing.getPublishedAt())
                 .sourceName(newArticle.getSourceName() != null ? newArticle.getSourceName() : existing.getSourceName())
-                .language(newArticle.getLanguage() != null ? newArticle.getLanguage() : existing.getLanguage());
+                .language(newArticle.getLanguage() != null ? newArticle.getLanguage() : existing.getLanguage())
+                .rating(newArticle.getRating() != null ? newArticle.getRating() : existing.getRating());
 
         if (newArticle.getSummary() != null) {
             builder.summary(newArticle.getSummary());
@@ -99,6 +100,12 @@ public class DatabaseService {
             builder.status(newArticle.getStatus());
         } else {
             builder.status(existing.getStatus());
+        }
+
+        if (newArticle.getRating() != null) {
+            builder.rating(newArticle.getRating());
+        } else if (existing.getRating() != null) {
+            builder.rating((existing.getRating()));
         }
 
         return builder.build();

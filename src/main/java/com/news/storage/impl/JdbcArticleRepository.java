@@ -23,8 +23,8 @@ public class JdbcArticleRepository implements ArticleRepository {
     @Override
     public void save(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
-                "INSERT INTO articles (title, content, url, author, region, published_at, source_name, language, status, summary, image_url) " +
-                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
+                "INSERT INTO articles (title, content, url, author, region, published_at, source_name, language, status, summary, image_url, rating) " +
+                        "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT DO NOTHING")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getUrl());
@@ -43,10 +43,11 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(9, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
             stmt.setString(10, article.getSummary());
             stmt.setString(11, article.getImageUrl());
+            stmt.setInt(12, article.getRating() != null ? article.getRating() : 0);
 
             stmt.executeUpdate();
         } catch (SQLException e) {
-            throw new StorageException("Failed to save article", e);
+            throw new StorageException("Failed to save article to DB", e);
         }
     }
 
@@ -169,7 +170,7 @@ public class JdbcArticleRepository implements ArticleRepository {
     public void update(Article article) {
         try (PreparedStatement stmt = connection.prepareStatement(
                 "UPDATE articles SET title = ?, content = ?, author = ?, region = ?, published_at = ?, " +
-                        "source_name = ?, language = ?, status = ?, summary = ?, image_url = ? WHERE url = ?")) {
+                        "source_name = ?, language = ?, status = ?, summary = ?, image_url = ?, rating = ? WHERE url = ?")) {
             stmt.setString(1, article.getTitle());
             stmt.setString(2, article.getContent());
             stmt.setString(3, article.getAuthor());
@@ -187,14 +188,14 @@ public class JdbcArticleRepository implements ArticleRepository {
             stmt.setString(8, article.getStatus() != null ? article.getStatus().name() : ArticleStatus.RAW.name());
             stmt.setString(9, article.getSummary());
             stmt.setString(10, article.getImageUrl());
-            stmt.setString(11, article.getUrl());
+            stmt.setInt(11, article.getRating() != null ? article.getRating() : 0);
+            stmt.setString(12, article.getUrl());
 
             stmt.executeUpdate();
         } catch (SQLException e) {
             throw new StorageException("Failed to update article", e);
         }
     }
-
     @Override
     public List<Article> findArticlesWithFilters(ArticleFilter filter) {
         StringBuilder sql = new StringBuilder();

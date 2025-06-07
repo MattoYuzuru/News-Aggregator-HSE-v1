@@ -13,14 +13,14 @@ import java.util.List;
 
 import static com.news.storage.impl.JdbcTagRepository.parseTags;
 
-public class QwenClient implements AIClient {
+public class OllamaClient implements AIClient {
     private static final String API_URL = "http://localhost:11434/api/generate";
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final HttpClient client = HttpClient.newHttpClient();
 
     private final String modelName;
 
-    public QwenClient(String modelName) {
+    public OllamaClient(String modelName) {
         this.modelName = modelName;
     }
 
@@ -62,31 +62,24 @@ public class QwenClient implements AIClient {
     }
 
     @Override
-    public Double evaluateArticle(String articleContent) throws IOException, InterruptedException {
-        String shortenedContent = shortenArticleByHalf(articleContent);
-        String prompt = "Evaluate the following news article based on its quality, clarity, informativeness, and credibility." +
-                " Rate the article on a scale from 1.0 to 10.0, where 1.0 is very poor and 10.0 is excellent." +
-                " Consider factors like: factual accuracy, writing quality, completeness of information, and overall value to readers.\n" +
-                "Return ONLY the numerical rating (e.g., 7.5), without explanation.\n" +
-                "\n" +
-                shortenedContent;
+    public Integer evaluateArticle(String articleTitle) throws IOException, InterruptedException {
+        String prompt = "Title: " + articleTitle + "\n" +
+                "Target Audience: University students interested in technologies, IT, world news, travelling, advances in science (health, tech), gaming, and developments that may affect the stock market.\n" +
+                "Task: Rate how appealing or relevant this article is to the target audience on a scale from 1 to 100, where 1 is very poor and 100 is excellent.\n" +
+                "Consider factors like: factual accuracy, writing quality, completeness of information, and overall value to readers.\n" +
+                "Output ONLY the number, without explanation.";
 
         JsonNode jsonNode = generateResponse(prompt);
         if (jsonNode.has("response")) {
             try {
                 String response = cleanResponse(jsonNode.get("response").asText());
-                return Double.parseDouble(response.trim());
+                return Integer.parseInt(response.trim());
             } catch (NumberFormatException e) {
                 System.err.println("Failed to parse rating from response: " + jsonNode.get("response").asText());
                 return null;
             }
         }
         return null;
-    }
-
-    @Override
-    public String getModelName() {
-        return modelName;
     }
 
     private JsonNode generateResponse(String prompt) throws IOException, InterruptedException {

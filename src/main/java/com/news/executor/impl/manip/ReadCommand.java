@@ -76,6 +76,12 @@ public class ReadCommand implements ValidatableCommand {
             System.out.println("📅 Published: Unknown date");
         }
 
+        if (article.getRating() != null) {
+            System.out.printf("😃 Relevancy rate: %s%n", article.getRating());
+        } else {
+            System.out.println("😃 Relevancy rate: Unknown");
+        }
+
         System.out.printf("✍️ Author: %s%n", valueOrUnknown(article.getAuthor()));
 
         if (article.getRegion() != null && !article.getRegion().isBlank()) {

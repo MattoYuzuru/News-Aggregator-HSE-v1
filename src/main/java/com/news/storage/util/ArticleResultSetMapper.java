@@ -12,10 +12,6 @@ import java.util.List;
 
 public class ArticleResultSetMapper {
 
-    public static Article mapRow(ResultSet rs) throws SQLException {
-        return mapRow(rs, null);
-    }
-
     public static Article mapRow(ResultSet rs, Connection connection) throws SQLException {
         Article.ArticleBuilder builder = Article.builder()
                 .id(rs.getLong("id"))
@@ -30,17 +26,14 @@ public class ArticleResultSetMapper {
                 .sourceName(rs.getString("source_name"))
                 .imageUrl(rs.getString("image_url"))
                 .language(rs.getString("language"))
-                .status(ArticleStatus.valueOf(rs.getString("status")));
+                .status(ArticleStatus.valueOf(rs.getString("status")))
+                .rating(rs.getObject("rating") != null ? rs.getInt("rating") : null);
 
         if (connection != null) {
             builder.tags(loadTagsForArticle(rs.getLong("id"), connection));
         }
 
         return builder.build();
-    }
-
-    public static List<Article> mapRows(ResultSet rs) throws SQLException {
-        return mapRows(rs, null);
     }
 
     public static List<Article> mapRows(ResultSet rs, Connection connection) throws SQLException {

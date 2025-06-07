@@ -1,4 +1,4 @@
-package com.news.ai;
+package com.news.ai.client;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -13,35 +13,42 @@ import java.util.List;
 
 import static com.news.storage.impl.JdbcTagRepository.parseTags;
 
-public class OllamaClient {
+public class QwenClient implements AIClient {
     private static final String API_URL = "http://localhost:11434/api/generate";
-    private static final String MODEL = "qwen3:4b";  // change model later
     private static final ObjectMapper objectMapper = new ObjectMapper();
     private static final HttpClient client = HttpClient.newHttpClient();
 
-    public static String summarize(String articleContent) throws IOException, InterruptedException {
+    private final String modelName;
+
+    public QwenClient(String modelName) {
+        this.modelName = modelName;
+    }
+
+    @Override
+    public String summarize(String articleContent) throws IOException, InterruptedException {
         String prompt = "Read the following article and generate a concise summary in the same language as the article." +
                 " Focus on the main events, people, or topics mentioned.\n" +
                 "Return ONLY the summary, without additional comments or formatting.\n" +
                 "\n" + articleContent;
 
         JsonNode jsonNode = generateResponse(prompt);
-        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "Нет поля 'response' в ответе.";
+        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "No 'response' field in response.";
     }
 
+    @Override
     public String classifyRegion(String articleContent) throws IOException, InterruptedException {
         String shortenedContent = shortenArticleByHalf(articleContent);
         String prompt = "Given the following news article excerpt, identify the geographic region that best represents the main location(s) where the events occur." +
                 " If the events are localized to a specific city or prefecture, etc (e.g., Tokyo or Osaka), return the city or prefecture name." +
-                " If the events span multiple countries or locations, return a broader region name (e.g., “East Asia” for events across Japan and South Korea).\n" +
-                "Return ONLY the most appropriate location name without any explanation.\n" +
-                "\n" +
+                " If the events span multiple countries or locations, return a broader region name (e.g., \"East Asia\" for events across Japan and South Korea).\n" +
+                "Return ONLY the most appropriate location name without any explanation.\n\n" +
                 shortenedContent;
 
         JsonNode jsonNode = generateResponse(prompt);
-        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "No 'response' filed in respond.";
+        return jsonNode.has("response") ? cleanResponse(jsonNode.get("response").asText()) : "No 'response' field in response.";
     }
 
+    @Override
     public List<String> generateTags(String articleContent) throws IOException, InterruptedException {
         String shortenedContent = shortenArticleByHalf(articleContent);
         String prompt = "Read the article below and generate 1 to 4 relevant tags that best capture the key themes or topics of the article." +
@@ -54,8 +61,36 @@ public class OllamaClient {
         return jsonNode.has("response") ? parseTags(cleanResponse(jsonNode.get("response").asText())) : List.of();
     }
 
-    private static JsonNode generateResponse(String prompt) throws IOException, InterruptedException {
-        String jsonRequest = objectMapper.writeValueAsString(new RequestModel(MODEL, prompt, false));
+    @Override
+    public Double evaluateArticle(String articleContent) throws IOException, InterruptedException {
+        String shortenedContent = shortenArticleByHalf(articleContent);
+        String prompt = "Evaluate the following news article based on its quality, clarity, informativeness, and credibility." +
+                " Rate the article on a scale from 1.0 to 10.0, where 1.0 is very poor and 10.0 is excellent." +
+                " Consider factors like: factual accuracy, writing quality, completeness of information, and overall value to readers.\n" +
+                "Return ONLY the numerical rating (e.g., 7.5), without explanation.\n" +
+                "\n" +
+                shortenedContent;
+
+        JsonNode jsonNode = generateResponse(prompt);
+        if (jsonNode.has("response")) {
+            try {
+                String response = cleanResponse(jsonNode.get("response").asText());
+                return Double.parseDouble(response.trim());
+            } catch (NumberFormatException e) {
+                System.err.println("Failed to parse rating from response: " + jsonNode.get("response").asText());
+                return null;
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public String getModelName() {
+        return modelName;
+    }
+
+    private JsonNode generateResponse(String prompt) throws IOException, InterruptedException {
+        String jsonRequest = objectMapper.writeValueAsString(new RequestModel(modelName, prompt, false));
 
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(API_URL))
@@ -64,21 +99,20 @@ public class OllamaClient {
                 .build();
 
         HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
-
         return objectMapper.readTree(response.body());
     }
 
-    public static String shortenArticleByHalf(String article) {
+    private static String shortenArticleByHalf(String article) {
         if (article == null || article.isEmpty()) return "";
         int halfLength = article.length() / 2;
         return article.substring(0, halfLength).trim();
     }
 
-    public static String cleanResponse(String responseText) {
+    private static String cleanResponse(String responseText) {
         String endTag = "</think>";
         int end = responseText.indexOf(endTag);
         if (end == -1 || end + endTag.length() >= responseText.length()) {
-            return "";
+            return responseText.trim();
         }
         return responseText.substring(end + endTag.length()).trim();
     }

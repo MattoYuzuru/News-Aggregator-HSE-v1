@@ -34,11 +34,22 @@ It automatically **collects**, **processes**, **analyzes**, and **filters** news
    git clone https://github.com/MattoYuzuru/News-Aggregator-HSE-v1.git
    cd News-Aggregator-HSE-v1
    ```
-2. Run with Docker:
+   
+2. Make config.properties in /News-Aggregator-HSE-v1 folder
+
+```shell
+
+DB_PASSWORD=<password>
+DB_USERNAME=<user>
+DB_URL=jdbc:postgresql://localhost:<port>/<dbname>
+```
+
+3. Run with Docker:
     ```shell
     docker-compose up --build
     ```
-3. Run manually:
+
+4. Run manually:
 
    ```shell
    mvn clean install

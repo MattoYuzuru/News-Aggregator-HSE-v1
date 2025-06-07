@@ -12,6 +12,7 @@ CREATE TABLE articles
     image_url    TEXT,
     language     TEXT,
     status       TEXT        DEFAULT 'RAW',
+    rating       INT         DEFAULT 0,
     published_at TIMESTAMPTZ,
     created_at   TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

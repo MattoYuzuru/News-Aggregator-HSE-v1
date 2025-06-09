@@ -2,8 +2,14 @@ package com.news.storage;
 
 import com.news.model.Article;
 import com.news.storage.impl.JdbcArticleRepository;
+import com.news.storage.impl.JdbcArticleStatsRepository;
 import com.news.storage.impl.JdbcArticleTagLinker;
 import com.news.storage.impl.JdbcTagRepository;
+import com.news.storage.inter.ArticleRepository;
+import com.news.storage.inter.ArticleStatsRepository;
+import com.news.storage.inter.ArticleTagLinker;
+import com.news.storage.inter.TagRepository;
+import com.news.storage.util.StorageException;
 import lombok.Getter;
 
 import java.sql.Connection;
@@ -18,6 +24,7 @@ public class DatabaseService {
     private final ArticleRepository articleRepository;
     private final TagRepository tagRepository;
     private final ArticleTagLinker articleTagLinker;
+    private final ArticleStatsRepository articleStatsRepository;
 
     public DatabaseService() throws SQLException {
         this.connection = DatabaseConfig.getConnection();
@@ -26,6 +33,7 @@ public class DatabaseService {
         this.articleRepository = new JdbcArticleRepository(connection);
         this.tagRepository = new JdbcTagRepository(connection);
         this.articleTagLinker = new JdbcArticleTagLinker(connection);
+        this.articleStatsRepository = new JdbcArticleStatsRepository(connection);
     }
 
     public void saveArticle(Article article) {

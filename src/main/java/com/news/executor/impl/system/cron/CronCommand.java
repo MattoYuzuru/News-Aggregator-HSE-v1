@@ -10,9 +10,9 @@ import com.news.model.ParsedCommand;
 import com.news.parser.ParserRegistry;
 import com.news.storage.DatabaseService;
 
+import java.io.Console;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
 import java.util.Set;
 
 import static com.news.ConfigLoader.AI_SUPPLEMENT_TIME_PER_ARTICLE;
@@ -153,14 +153,20 @@ public class CronCommand implements ValidatableCommand {
             }
 
             System.out.print("Continue with AI supplement? (y/N): ");
-            try (Scanner scanner = new Scanner(System.in)) {
-                String input = scanner.nextLine().trim().toLowerCase();
+            Console console = System.console();
+            if (console != null) {
+                String input = console.readLine().trim().toLowerCase();
                 return "y".equals(input);
+            } else {
+                // Fallback for when console is not available
+                System.err.println("Warning: Console not available, defaulting to 'no'");
+                return false;
             }
         } catch (Exception e) {
-            System.err.println("Warning: Could not estimate processing time: " + e.getMessage());
-            return true;
+            System.err.println("Warning: Could not get user input: " + e.getMessage());
+            return false;
         }
+
     }
 
     private int estimateArticleCount(Integer limit) {

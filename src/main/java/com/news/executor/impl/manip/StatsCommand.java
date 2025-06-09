@@ -46,13 +46,13 @@ public class StatsCommand implements ValidatableCommand {
 
     private void displayBasicStats() {
         try {
-            long totalArticles = databaseService.getArticleRepository().countAllArticles();
+            long totalArticles = databaseService.getArticleStatsRepository().countAllArticles();
             System.out.printf("📰 Total Articles: %,d%n", totalArticles);
 
             if (totalArticles > 0) {
                 System.out.println("\n📊 By Status:");
                 for (ArticleStatus status : ArticleStatus.values()) {
-                    long count = databaseService.getArticleRepository().countByStatus(status);
+                    long count = databaseService.getArticleStatsRepository().countByStatus(status);
                     double percentage = (count * 100.0) / totalArticles;
                     System.out.printf("   %s: %,d (%.1f%%)%n",
                             getStatusIcon(status) + " " + status.name(), count, percentage);
@@ -72,12 +72,13 @@ public class StatsCommand implements ValidatableCommand {
         displayAuthorStats();
         displayTagStats();
         displaySourceStatusBreakdown();
+        displayTopRatedArticles();
     }
 
     private void displaySourceStats() {
         try {
             System.out.println("\n🏢 Articles by Source:");
-            Map<String, Long> sourceCounts = databaseService.getArticleRepository().countBySource();
+            Map<String, Long> sourceCounts = databaseService.getArticleStatsRepository().countBySource();
 
             if (sourceCounts.isEmpty()) {
                 System.out.println("   No source data available");
@@ -101,7 +102,7 @@ public class StatsCommand implements ValidatableCommand {
     private void displayLanguageStats() {
         try {
             System.out.println("\n🌐 Articles by Language:");
-            Map<String, Long> languageCounts = databaseService.getArticleRepository().countByLanguage();
+            Map<String, Long> languageCounts = databaseService.getArticleStatsRepository().countByLanguage();
 
             if (languageCounts.isEmpty()) {
                 System.out.println("   No language data available");
@@ -119,7 +120,7 @@ public class StatsCommand implements ValidatableCommand {
     private void displayDateRangeStats() {
         try {
             System.out.println("\n📅 Articles by Time Period:");
-            Map<String, Long> dateStats = databaseService.getArticleRepository().getDateRangeStats();
+            Map<String, Long> dateStats = databaseService.getArticleStatsRepository().getDateRangeStats();
 
             if (dateStats.isEmpty()) {
                 System.out.println("   No date data available");
@@ -137,7 +138,7 @@ public class StatsCommand implements ValidatableCommand {
     private void displayAuthorStats() {
         try {
             System.out.println("\n✍️ Top Authors:");
-            List<String> topAuthors = databaseService.getArticleRepository().getTopAuthors(10);
+            List<String> topAuthors = databaseService.getArticleStatsRepository().getTopAuthors(10);
 
             if (topAuthors.isEmpty()) {
                 System.out.println("   No author data available");
@@ -155,7 +156,7 @@ public class StatsCommand implements ValidatableCommand {
     private void displayTagStats() {
         try {
             System.out.println("\n🏷️ Top Tags:");
-            Map<String, Long> topTags = databaseService.getArticleRepository().getTopTags(15);
+            Map<String, Long> topTags = databaseService.getArticleStatsRepository().getTopTags(15);
 
             if (topTags.isEmpty()) {
                 System.out.println("   No tag data available");
@@ -174,7 +175,7 @@ public class StatsCommand implements ValidatableCommand {
         try {
             System.out.println("\n📊 Source Status Breakdown (Top 5 Sources):");
             Map<String, Map<String, Long>> sourceStatusCounts =
-                    databaseService.getArticleRepository().countBySourceAndStatus();
+                    databaseService.getArticleStatsRepository().countBySourceAndStatus();
 
             if (sourceStatusCounts.isEmpty()) {
                 System.out.println("   No source/status data available");
@@ -195,6 +196,25 @@ public class StatsCommand implements ValidatableCommand {
             System.err.println("   ❌ Error retrieving source/status breakdown: " + e.getMessage());
         }
     }
+
+    private void displayTopRatedArticles() {
+        try {
+            System.out.println("\n⭐ Top Rated Articles:");
+            List<String> topRatedArticles = databaseService.getArticleStatsRepository().getTopRatedArticles(10);
+
+            if (topRatedArticles.isEmpty()) {
+                System.out.println("   No rated articles available");
+                return;
+            }
+
+            for (int i = 0; i < topRatedArticles.size(); i++) {
+                System.out.printf("   %d. %s%n", i + 1, topRatedArticles.get(i));
+            }
+        } catch (Exception e) {
+            System.err.println("   ❌ Error retrieving top rated articles: " + e.getMessage());
+        }
+    }
+
 
     private String getStatusIcon(ArticleStatus status) {
         return switch (status) {

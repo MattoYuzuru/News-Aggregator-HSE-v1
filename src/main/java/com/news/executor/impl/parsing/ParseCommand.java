@@ -70,6 +70,8 @@ public class ParseCommand implements ValidatableCommand {
             return parserRegistry.getAllParsers();
         }
 
+        System.out.println(sources);
+
         for (String src : sources) {
             try {
                 ParserName name = ParserName.valueOf(src.toUpperCase());

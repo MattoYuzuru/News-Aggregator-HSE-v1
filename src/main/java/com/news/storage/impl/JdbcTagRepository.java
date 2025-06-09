@@ -1,6 +1,6 @@
 package com.news.storage.impl;
 
-import com.news.storage.TagRepository;
+import com.news.storage.inter.TagRepository;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

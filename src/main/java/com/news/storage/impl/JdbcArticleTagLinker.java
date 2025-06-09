@@ -1,6 +1,6 @@
 package com.news.storage.impl;
 
-import com.news.storage.ArticleTagLinker;
+import com.news.storage.inter.ArticleTagLinker;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;

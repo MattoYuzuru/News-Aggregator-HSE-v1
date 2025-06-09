@@ -1,4 +1,4 @@
-package com.news.storage;
+package com.news.storage.inter;
 
 import java.sql.SQLException;
 

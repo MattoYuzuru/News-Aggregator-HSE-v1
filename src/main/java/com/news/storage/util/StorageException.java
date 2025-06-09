@@ -1,4 +1,4 @@
-package com.news.storage;
+package com.news.storage.util;
 
 public class StorageException extends RuntimeException {
     public StorageException(String message, Throwable cause) {

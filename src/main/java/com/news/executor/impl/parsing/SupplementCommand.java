@@ -81,13 +81,14 @@ public class SupplementCommand implements ValidatableCommand {
         Set<String> enabledOperations = new HashSet<>();
 
         // If no specific operations are specified, enable all by default
-        boolean hasSpecificOperations = parsedCommand.hasOption("summarize") ||
+        boolean hasSpecificOperations =
+                parsedCommand.hasOption("summarize") ||
                 parsedCommand.hasOption("classify-region") ||
                 parsedCommand.hasOption("generate-tags") ||
                 parsedCommand.hasOption("evaluate");
 
         if (!hasSpecificOperations) {
-            enabledOperations.addAll(Set.of("summarization", "region_classification", "tag_generation"));
+            enabledOperations.addAll(Set.of("summarization", "region_classification", "tag_generation", "evaluate"));
         } else {
             if (parsedCommand.hasOption("summarize")) {
                 enabledOperations.add("summarization");
@@ -117,7 +118,7 @@ public class SupplementCommand implements ValidatableCommand {
             }
 
             Article article = optionalArticle.get();
-            if (!article.getStatus().equals(ArticleStatus.ENRICHED)) {
+            if (!article.getStatus().equals(ArticleStatus.ENRICHED) && !article.getStatus().equals(ArticleStatus.ANALYZED)) {
                 System.err.println("Article has to be enriched before AI supplementation.");
                 return List.of();
             }

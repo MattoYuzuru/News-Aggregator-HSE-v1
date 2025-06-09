@@ -57,18 +57,27 @@ public class ParserService {
     public List<Article> collectAllArticlesParallel() {
         List<Article> all = Collections.synchronizedList(new ArrayList<>());
 
+        if (parsers.isEmpty()) {
+            return List.of();
+        }
+
+        if (limit != null && limit <= 0) {
+            return List.of();
+        }
+
         ExecutorService executor = Executors.newFixedThreadPool(parsers.size());
         List<Future<?>> futures = new ArrayList<>();
 
         for (Parser parser : parsers) {
             futures.add(executor.submit(() -> {
                 List<Article> articles = parser.fetchArticles();
-                if (limit != null && limit > 0) {
+                if (limit != null) {
                     articles = articles.stream().limit(limit / parsers.size()).toList();
                 }
                 all.addAll(articles);
             }));
         }
+
 
         for (Future<?> f : futures) {
             try {

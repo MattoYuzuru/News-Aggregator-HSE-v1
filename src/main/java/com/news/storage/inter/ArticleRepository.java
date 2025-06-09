@@ -1,4 +1,4 @@
-package com.news.storage;
+package com.news.storage.inter;
 
 import com.news.model.Article;
 import com.news.model.ArticleFilter;
@@ -6,7 +6,6 @@ import com.news.model.ArticleStatus;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Map;
 
 public interface ArticleRepository {
     void save(Article article);

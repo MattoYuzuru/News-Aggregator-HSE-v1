@@ -7,6 +7,7 @@ A news aggregator developed as a 1st-year course project for the *Introduction t
 It automatically **collects**, **processes**, **analyzes**, and **filters** news from various sources.
 
 ## 🚀 Features
+
 - **News collection** from specified sources (XML, web page parsing)
 - Configurable list of news sources
 - **Duplicate removal** and **content cleaning** (e.g., ad stripping)
@@ -24,7 +25,7 @@ It automatically **collects**, **processes**, **analyzes**, and **filters** news
 - **Backend**: Java 21
 - **Database**: PostgreSQL
 - **Tools**: Docker, Maven
-- **Parsing**: JSoup
+- **Parsing**: JSoup, Selenium
 - **AI/ML**: Ollama (local, for now)
 
 ## 📦 Setup and Running
@@ -57,4 +58,5 @@ DB_URL=jdbc:postgresql://localhost:<port>/<dbname>
    ```
 
 ## 📝 Лицензия
+
 [BSD 2-Clause License](LICENSE)

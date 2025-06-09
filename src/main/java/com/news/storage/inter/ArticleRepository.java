@@ -29,22 +29,6 @@ public interface ArticleRepository {
 
     void deleteOlderThanDays(int days);
 
-    long countAllArticles();
-
-    long countByStatus(ArticleStatus status);
-
-    Map<String, Long> countBySource();
-
-    Map<String, Long> countByLanguage();
-
-    Map<String, Map<String, Long>> countBySourceAndStatus();
-
-    Map<String, Long> getDateRangeStats();
-
-    List<String> getTopAuthors(int limit);
-
-    Map<String, Long> getTopTags(int limit);
-
     Optional<List<Article>> findBySubstrInTitle(String substr);
 
     Optional<List<Article>> findBySubstrInContent(String substr);

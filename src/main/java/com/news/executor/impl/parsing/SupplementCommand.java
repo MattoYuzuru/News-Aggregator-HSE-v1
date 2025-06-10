@@ -88,7 +88,7 @@ public class SupplementCommand implements ValidatableCommand {
                 parsedCommand.hasOption("evaluate");
 
         if (!hasSpecificOperations) {
-            enabledOperations.addAll(Set.of("summarization", "region_classification", "tag_generation", "evaluate"));
+            enabledOperations.addAll(Set.of("summarization", "region_classification", "tag_generation", "evaluation"));
         } else {
             if (parsedCommand.hasOption("summarize")) {
                 enabledOperations.add("summarization");

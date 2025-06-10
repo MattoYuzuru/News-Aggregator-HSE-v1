@@ -74,7 +74,7 @@ public class ListCommand implements ValidatableCommand {
     private void applySourceFilter(ParsedCommand parsedCommand, ArticleFilter.Builder filterBuilder) {
         if (parsedCommand.hasOption("source")) {
             String source = parsedCommand.getOption("source");
-            filterBuilder.source(source);
+            filterBuilder.source(source.toUpperCase());
         }
     }
 
